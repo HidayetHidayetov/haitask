@@ -58,6 +58,7 @@ export async function runInit() {
     const model = DEFAULT_MODELS[aiProvider.toLowerCase()] || DEFAULT_MODELS.groq;
 
     const config = {
+      target: 'jira',
       jira: {
         baseUrl: jiraBaseUrl,
         projectKey: jiraProjectKey,

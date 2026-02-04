@@ -1,14 +1,18 @@
 /**
- * haitask run — Execute full pipeline (Git → AI → Jira).
+ * haitask run — Execute full pipeline (Git → AI → target).
  * Thin handler: load config, call pipeline, output result.
  */
 
 import { loadConfig } from '../config/load.js';
 import { runPipeline } from '../core/pipeline.js';
 
-function buildIssueUrl(config, issueKey) {
-  const baseUrl = (config?.jira?.baseUrl || process.env.JIRA_BASE_URL || '').replace(/\/$/, '');
-  return baseUrl ? `${baseUrl}/browse/${issueKey}` : issueKey;
+function buildTaskUrl(config, key) {
+  const target = (config?.target || 'jira').toLowerCase();
+  if (target === 'jira') {
+    const baseUrl = (config?.jira?.baseUrl || process.env.JIRA_BASE_URL || '').replace(/\/$/, '');
+    return baseUrl ? `${baseUrl}/browse/${key}` : key;
+  }
+  return key;
 }
 
 export async function runRun(options = {}) {
@@ -35,9 +39,9 @@ export async function runRun(options = {}) {
     }
 
     if (result.dry) {
-      console.log('Dry run — no Jira issue created.');
+      console.log('Dry run — no task created.');
       console.log('Commit:', result.commitData?.message?.split('\n')[0] || '');
-      console.log('Would create Jira task:', result.payload?.title || '');
+      console.log('Would create task:', result.payload?.title || '');
       if (result.payload?.description) {
         const desc = result.payload.description;
         console.log('Description (preview):', desc.slice(0, 120) + (desc.length > 120 ? '...' : ''));
@@ -45,9 +49,9 @@ export async function runRun(options = {}) {
       return;
     }
 
-    console.log('Created Jira issue:', result.key);
-    const issueUrl = buildIssueUrl(config, result.key);
-    if (issueUrl !== result.key) console.log(issueUrl);
+    const displayUrl = result.url || buildTaskUrl(config, result.key);
+    console.log('Created task:', result.key);
+    if (displayUrl && displayUrl !== result.key) console.log(displayUrl);
   } catch (err) {
     console.error('Error:', err.message);
     process.exitCode = 1;

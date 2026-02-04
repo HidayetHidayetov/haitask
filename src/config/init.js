@@ -7,6 +7,7 @@ import { writeFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
 const DEFAULT_RC = {
+  target: 'jira',
   jira: {
     baseUrl: 'https://your-domain.atlassian.net',
     projectKey: 'PROJ',

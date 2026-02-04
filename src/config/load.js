@@ -7,7 +7,8 @@ import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
 const CONFIG_FILENAME = '.haitaskrc';
-const REQUIRED_KEYS = ['jira', 'ai', 'rules'];
+const REQUIRED_KEYS = ['ai', 'rules'];
+const VALID_TARGETS = ['jira', 'trello'];
 
 /**
  * Load and validate .haitaskrc.
@@ -43,5 +44,13 @@ export function loadConfig(configPath) {
     throw new Error(`Config missing required sections: ${missing.join(', ')}. Check .haitaskrc.`);
   }
 
+  config.target = (config.target || 'jira').toLowerCase();
+  if (!VALID_TARGETS.includes(config.target)) {
+    throw new Error(`Invalid target: "${config.target}". Allowed: ${VALID_TARGETS.join(', ')}.`);
+  }
+  const targetSection = config[config.target];
+  if (!targetSection || typeof targetSection !== 'object') {
+    throw new Error(`Config missing section for target "${config.target}". Add a "${config.target}" object in .haitaskrc.`);
+  }
   return config;
 }

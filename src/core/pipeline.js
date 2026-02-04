@@ -1,12 +1,12 @@
 /**
- * Pipeline: Git → AI → Jira
+ * Pipeline: Git → AI → target (Jira, Trello, …).
  * Orchestrates steps. No direct I/O (no console.log).
  * Returns structured result for CLI to display.
  */
 
 import { getLatestCommitData } from '../git/commit.js';
 import { generateTaskPayload } from '../ai/index.js';
-import { createIssue } from '../jira/client.js';
+import { createTask } from '../backend/index.js';
 
 /**
  * Validate branch and commit prefix from config.rules.
@@ -42,10 +42,10 @@ function validateRules(commitData, config) {
 }
 
 /**
- * Run full pipeline: Git → validate → AI → Jira (unless dry).
+ * Run full pipeline: Git → validate → AI → target (unless dry).
  * @param {object} config - Loaded .haitaskrc
  * @param {{ dry?: boolean, issueType?: string, transitionToStatus?: string }} options
- * @returns {Promise<{ ok: boolean, dry?: boolean, key?: string, payload?: object, commitData?: object, error?: string }>}
+ * @returns {Promise<{ ok: boolean, dry?: boolean, key?: string, url?: string, payload?: object, commitData?: object, error?: string }>}
  */
 export async function runPipeline(config, options = {}) {
   const { dry = false, issueType: typeOverride, transitionToStatus: statusOverride } = options;
@@ -59,9 +59,14 @@ export async function runPipeline(config, options = {}) {
     return { ok: true, dry: true, payload, commitData };
   }
 
-  const jiraConfig = mergeJiraOverrides(config, { issueType: typeOverride, transitionToStatus: statusOverride });
-  const { key } = await createIssue(payload, jiraConfig);
-  return { ok: true, key, payload, commitData };
+  const target = (config?.target || 'jira').toLowerCase();
+  const mergedConfig =
+    target === 'jira'
+      ? mergeJiraOverrides(config, { issueType: typeOverride, transitionToStatus: statusOverride })
+      : config;
+
+  const { key, url } = await createTask(payload, mergedConfig);
+  return { ok: true, key, url, payload, commitData };
 }
 
 /**
