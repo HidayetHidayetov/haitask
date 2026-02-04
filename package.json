@@ -10,6 +10,11 @@
   "engines": {
     "node": ">=18"
   },
+  "files": [
+    "src",
+    "README.md",
+    ".env.example"
+  ],
   "scripts": {
     "start": "node src/index.js",
     "init": "node src/index.js init",
@@ -20,9 +25,17 @@
     "jira",
     "git",
     "ai",
-    "automation"
+    "automation",
+    "commit",
+    "task"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HidayetHidayetov/haitask.git"
+  },
+  "homepage": "https://github.com/HidayetHidayetov/haitask#readme",
+  "bugs": "https://github.com/HidayetHidayetov/haitask/issues",
   "dependencies": {
     "commander": "^12.0.0",
     "dotenv": "^16.4.5",
