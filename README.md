@@ -17,6 +17,10 @@ haitask run    # Run pipeline (Git → AI → Jira)
 haitask run --dry   # Dry run (no Jira API call)
 ```
 
+## Usage (Laravel və digər layihələr)
+
+Ətraflı addımlar və Laravel nümunəsi üçün **[USAGE.md](USAGE.md)** bax.
+
 ## Commands
 
 | Command | Description |
