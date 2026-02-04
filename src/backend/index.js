@@ -31,7 +31,8 @@ export async function createTask(payload, config) {
   }
 
   if (target === 'trello') {
-    throw new Error('Trello adapter not implemented yet. Use target: "jira" for now.');
+    const { createTask: createTrelloTask } = await import('../trello/client.js');
+    return createTrelloTask(payload, config);
   }
 
   throw new Error(`Target "${target}" has no adapter.`);
