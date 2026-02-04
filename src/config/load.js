@@ -3,12 +3,12 @@
  * No hardcoded defaults — file must exist and be valid.
  */
 
-import { readFileSync, existsSync } from 'fs';
-import { resolve } from 'path';
+import { readFileSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { VALID_TARGETS } from './constants.js';
 
 const CONFIG_FILENAME = '.haitaskrc';
 const REQUIRED_KEYS = ['ai', 'rules'];
-const VALID_TARGETS = ['jira', 'trello'];
 
 /**
  * Load and validate .haitaskrc.

@@ -3,8 +3,8 @@
  * So users can have one global .env for all projects or override per repo.
  */
 
-import { existsSync } from 'fs';
-import { resolve } from 'path';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { config as loadDotenv } from 'dotenv';
 
 const CWD = process.cwd();

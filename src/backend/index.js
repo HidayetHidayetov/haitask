@@ -4,13 +4,8 @@
  */
 
 import { createIssue } from '../jira/client.js';
-
-const SUPPORTED_TARGETS = ['jira', 'trello'];
-
-function buildJiraUrl(config, key) {
-  const baseUrl = (config?.jira?.baseUrl || process.env.JIRA_BASE_URL || '').replace(/\/$/, '');
-  return baseUrl ? `${baseUrl}/browse/${key}` : key;
-}
+import { VALID_TARGETS } from '../config/constants.js';
+import { buildJiraUrl } from '../utils/urls.js';
 
 /**
  * Create a task in the configured target (Jira, Trello, …).
@@ -21,8 +16,8 @@ function buildJiraUrl(config, key) {
 export async function createTask(payload, config) {
   const target = (config?.target || 'jira').toLowerCase();
 
-  if (!SUPPORTED_TARGETS.includes(target)) {
-    throw new Error(`Unknown target: "${target}". Supported: ${SUPPORTED_TARGETS.join(', ')}.`);
+  if (!VALID_TARGETS.includes(target)) {
+    throw new Error(`Unknown target: "${target}". Supported: ${VALID_TARGETS.join(', ')}.`);
   }
 
   if (target === 'jira') {

@@ -5,14 +5,12 @@
 
 import { loadConfig } from '../config/load.js';
 import { runPipeline } from '../core/pipeline.js';
+import { buildJiraUrl } from '../utils/urls.js';
 
-function buildTaskUrl(config, key) {
+function getDisplayUrl(config, key, resultUrl) {
+  if (resultUrl) return resultUrl;
   const target = (config?.target || 'jira').toLowerCase();
-  if (target === 'jira') {
-    const baseUrl = (config?.jira?.baseUrl || process.env.JIRA_BASE_URL || '').replace(/\/$/, '');
-    return baseUrl ? `${baseUrl}/browse/${key}` : key;
-  }
-  return key;
+  return target === 'jira' ? buildJiraUrl(config, key) : key;
 }
 
 export async function runRun(options = {}) {
@@ -49,7 +47,7 @@ export async function runRun(options = {}) {
       return;
     }
 
-    const displayUrl = result.url || buildTaskUrl(config, result.key);
+    const displayUrl = getDisplayUrl(config, result.key, result.url);
     console.log('Created task:', result.key);
     if (displayUrl && displayUrl !== result.key) console.log(displayUrl);
   } catch (err) {

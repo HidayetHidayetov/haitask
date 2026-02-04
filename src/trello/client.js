@@ -3,6 +3,8 @@
  * API: https://api.trello.com/1/cards (key + token in query).
  */
 
+import { TRELLO_ID_REGEX } from '../config/constants.js';
+
 const TRELLO_API = 'https://api.trello.com/1';
 
 /**
@@ -25,6 +27,11 @@ export async function createTask(payload, config) {
   if (!listId) {
     throw new Error('Trello list ID missing. Set trello.listId in .haitaskrc (the list where cards are created).');
   }
+  if (!TRELLO_ID_REGEX.test(listId)) {
+    throw new Error(
+      'Trello list ID must be a 24-character hex string. Get it from the list URL or API (GET /boards/{id}/lists).'
+    );
+  }
 
   const name = (payload?.title || '').trim() || 'Untitled';
   const desc = (payload?.description || '').trim() || '';
@@ -32,12 +39,16 @@ export async function createTask(payload, config) {
   const query = new URLSearchParams({ key: apiKey, token });
   const body = { idList: listId, name, desc };
 
+  // API expects 24-char hex member ID, not username. Skip if value looks like username.
   const memberId = trello.memberId?.trim() || process.env.TRELLO_MEMBER_ID?.trim();
-  if (memberId) body.idMembers = [memberId];
+  if (memberId && TRELLO_ID_REGEX.test(memberId)) body.idMembers = [memberId];
 
   const labelIds = trello.labelIds;
   if (Array.isArray(labelIds) && labelIds.length > 0) {
-    body.idLabels = labelIds.filter((id) => typeof id === 'string' && id.trim()).map((id) => id.trim());
+    body.idLabels = labelIds
+      .filter((id) => typeof id === 'string' && id.trim())
+      .map((id) => id.trim())
+      .filter((id) => TRELLO_ID_REGEX.test(id));
   }
 
   const url = `${TRELLO_API}/cards?${query.toString()}`;

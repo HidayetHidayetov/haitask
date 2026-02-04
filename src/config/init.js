@@ -3,8 +3,8 @@
  * No I/O assumptions — caller can use for messaging.
  */
 
-import { writeFileSync, existsSync } from 'fs';
-import { resolve } from 'path';
+import { writeFileSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 const DEFAULT_RC = {
   target: 'jira',
@@ -24,8 +24,13 @@ const DEFAULT_RC = {
   },
 };
 
-// Note: Only Jira keys are required. AI key depends on provider (DEEPSEEK_API_KEY or OPENAI_API_KEY)
-const REQUIRED_ENV_KEYS = ['JIRA_BASE_URL', 'JIRA_EMAIL', 'JIRA_API_TOKEN'];
+const JIRA_REQUIRED = ['JIRA_BASE_URL', 'JIRA_EMAIL', 'JIRA_API_TOKEN'];
+const TRELLO_REQUIRED = ['TRELLO_API_KEY', 'TRELLO_TOKEN'];
+
+function getRequiredKeysForTarget(target) {
+  const t = (target || 'jira').toLowerCase();
+  return t === 'trello' ? [...TRELLO_REQUIRED] : [...JIRA_REQUIRED];
+}
 
 /**
  * Create .haitaskrc in dir if it does not exist.
@@ -41,15 +46,14 @@ export function createDefaultConfigFile(dir = process.cwd()) {
 
 /**
  * Check required env keys (env is already loaded by loadEnvFiles at CLI entry).
- * If config is provided, also validates AI provider key.
+ * Target (jira vs trello) and AI provider determine which keys are required.
  * @param {string} [dir] - Unused; kept for API compatibility
- * @param {object} [config] - Optional config to check AI provider key
+ * @param {object} [config] - Optional config (target, ai.provider)
  * @returns {{ valid: boolean, missing: string[] }}
  */
 export function validateEnv(dir = process.cwd(), config = null) {
-  const missing = [...REQUIRED_ENV_KEYS];
+  const missing = getRequiredKeysForTarget(config?.target);
 
-  // Check AI provider key if config provided
   if (config?.ai?.provider) {
     const provider = config.ai.provider.toLowerCase();
     const aiKeys = {
