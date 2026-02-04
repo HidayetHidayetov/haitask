@@ -9,7 +9,7 @@ import { runRun } from './commands/run.js';
 program
   .name('haitask')
   .description('HAITASK — Generate Jira tasks from Git commits using AI')
-  .version('0.1.3');
+  .version('0.1.4');
 
 program
   .command('init')

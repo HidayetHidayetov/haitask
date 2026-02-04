@@ -211,6 +211,9 @@ export async function createIssue(payload, config) {
   const key = data?.key;
   if (!key) throw new Error('Jira API response missing issue key.');
 
+  // Wait 4s before assign: Jira (e.g. next-gen) may need a moment before assignee API applies
+  await new Promise((r) => setTimeout(r, 2000));
+
   const assignResult = await assignIssue(baseUrl, key, assigneeAccountId, auth);
   if (!assignResult.ok) {
     throw new Error(`Issue ${key} created but assign failed. ${assignResult.message || ''}`);
