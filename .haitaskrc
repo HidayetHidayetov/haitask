@@ -1,4 +1,10 @@
 {
+  "target": "trello",
+  "trello": {
+    "listId": "67ea669c15fe66d95d2a7bbe",
+    "labelIds": [],
+    "memberId": ""
+  },
   "jira": {
     "baseUrl": "https://azerishiqprogrammingteam.atlassian.net",
     "projectKey": "EM",
@@ -12,7 +18,8 @@
     "allowedBranches": [
       "main",
       "develop",
-      "master"
+      "master",
+      "dev"
     ],
     "commitPrefixes": [
       "feat",
