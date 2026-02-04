@@ -28,19 +28,16 @@ git clone https://github.com/HidayetHidayetov/haitask.git && cd haitask && npm i
 
 ## Quick start
 
-1. **Credentials (one-time)**  
-   Create a `.env` (e.g. in your home dir or a shared config folder) with:
-   - One AI provider key: `GROQ_API_KEY`, `DEEPSEEK_API_KEY`, or `OPENAI_API_KEY`
-   - Jira: `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`  
-   Copy from `.env.example` in the repo.
-
-2. **Per project (one-time)**  
+1. **Per project (one-time)**  
    In the Git repo where you want to create Jira issues:
    ```bash
    cd /path/to/your/repo
    haitask init
    ```
-   This creates `.haitaskrc`. Edit it: set `jira.projectKey`, `jira.baseUrl`, and optionally `rules.allowedBranches` and `rules.commitPrefixes`.
+   **Interactive setup:** you’ll be asked for Jira base URL, project key, issue type, AI provider (groq / deepseek / openai), allowed branches, and commit prefixes. A `.haitaskrc` file is created from your answers. You’ll then choose where to store API keys: **this project** (`.env` in the repo) or **global** (`~/.haitask/.env`, shared across projects). A template `.env` is created in the chosen place — add your own keys there (never commit real keys).
+
+2. **Add your API keys**  
+   Edit the `.env` that was created (project or `~/.haitask/.env`): set one AI key (`GROQ_API_KEY`, `DEEPSEEK_API_KEY`, or `OPENAI_API_KEY`) and Jira keys (`JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`). Optional: `JIRA_ACCOUNT_ID` to auto-assign issues.
 
 3. **Create a Jira issue from the latest commit**  
    After committing:
@@ -56,7 +53,7 @@ git clone https://github.com/HidayetHidayetov/haitask.git && cd haitask && npm i
 
 | Command | Description |
 |--------|-------------|
-| `haitask init` | Create `.haitaskrc` in cwd (no overwrite if present). Validates env. |
+| `haitask init` | Interactive setup: prompts for Jira/AI/rules → writes `.haitaskrc`, optional `.env` (project or ~/.haitask/.env). |
 | `haitask run` | Run pipeline: Git → AI → Jira (create issue). |
 | `haitask run --dry` | Same as above but skips the Jira API call. |
 
@@ -65,7 +62,7 @@ git clone https://github.com/HidayetHidayetov/haitask.git && cd haitask && npm i
 ## Configuration
 
 - **`.haitaskrc`** (project root): Jira `baseUrl`, `projectKey`, `issueType`; AI `provider` and `model`; `rules.allowedBranches` and `rules.commitPrefixes`. Single source of truth for behaviour.
-- **`.env`**: API keys only. Prefer loading it from the directory where you run `haitask` (or the same folder as the cloned repo when using `npm link`).
+- **`.env`**: API keys only. Loaded in order: **project** `.env` (current directory), then **global** `~/.haitask/.env`. So you can use one global `.env` for all projects or override per repo.
 
 **AI providers** (set `ai.provider` in `.haitaskrc`): `groq` (default, free), `deepseek` (free), `openai` (paid). Set the corresponding key in `.env`.
 

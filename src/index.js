@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-import 'dotenv/config';
+import { loadEnvFiles } from './config/env-loader.js';
+loadEnvFiles();
 import { program } from 'commander';
 import { runInit } from './commands/init.js';
 import { runRun } from './commands/run.js';
@@ -8,7 +9,7 @@ import { runRun } from './commands/run.js';
 program
   .name('haitask')
   .description('HAITASK — Generate Jira tasks from Git commits using AI')
-  .version('0.1.0');
+  .version('0.1.1');
 
 program
   .command('init')

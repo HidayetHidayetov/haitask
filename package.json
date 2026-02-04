@@ -1,11 +1,11 @@
 {
   "name": "haitask",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Hidayet AI Task — Generate Jira tasks from Git commits using AI",
   "type": "module",
   "main": "src/index.js",
   "bin": {
-    "haitask": "./src/index.js"
+    "haitask": "src/index.js"
   },
   "engines": {
     "node": ">=18"
@@ -32,7 +32,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/HidayetHidayetov/haitask.git"
+    "url": "git+https://github.com/HidayetHidayetov/haitask.git"
   },
   "homepage": "https://github.com/HidayetHidayetov/haitask#readme",
   "bugs": "https://github.com/HidayetHidayetov/haitask/issues",

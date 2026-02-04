@@ -5,7 +5,6 @@
 
 import { writeFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
-import { config as loadEnv } from 'dotenv';
 
 const DEFAULT_RC = {
   jira: {
@@ -41,15 +40,13 @@ export function createDefaultConfigFile(dir = process.cwd()) {
 }
 
 /**
- * Load .env from dir and check required keys.
+ * Check required env keys (env is already loaded by loadEnvFiles at CLI entry).
  * If config is provided, also validates AI provider key.
- * @param {string} [dir] - Directory (default: process.cwd())
+ * @param {string} [dir] - Unused; kept for API compatibility
  * @param {object} [config] - Optional config to check AI provider key
  * @returns {{ valid: boolean, missing: string[] }}
  */
 export function validateEnv(dir = process.cwd(), config = null) {
-  const envPath = resolve(dir, '.env');
-  loadEnv({ path: envPath });
   const missing = [...REQUIRED_ENV_KEYS];
 
   // Check AI provider key if config provided
