@@ -1,0 +1,22 @@
+{
+  "jira": {
+    "baseUrl": "https://your-domain.atlassian.net",
+    "projectKey": "PROJ",
+    "issueType": "Task"
+  },
+  "ai": {
+    "provider": "openai",
+    "model": "gpt-4o-mini"
+  },
+  "rules": {
+    "allowedBranches": [
+      "main",
+      "develop"
+    ],
+    "commitPrefixes": [
+      "feat",
+      "fix",
+      "chore"
+    ]
+  }
+}
