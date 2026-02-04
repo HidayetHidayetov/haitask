@@ -9,7 +9,8 @@
  */
 export function buildPrompt(commitData) {
   const { message, branch, repoName } = commitData;
-  const system = `You generate a Jira task from a Git commit. Reply with a single JSON object only, no markdown or extra text. Keys: "title" (short summary, string), "description" (detailed description, string), "labels" (array of strings, e.g. ["auto", "commit"]).`;
+  const system = `You generate a Jira task from a Git commit. Reply with a single JSON object only, no markdown or extra text.
+Keys: "title" (short Jira task title, plain language — do NOT include prefixes like feat:, fix:, chore: in the title), "description" (detailed description, string), "labels" (array of strings, e.g. ["auto", "commit"]).`;
   const user = `Repo: ${repoName}\nBranch: ${branch}\nCommit message:\n${message}\n\nGenerate the JSON object.`;
   return { system, user };
 }
@@ -34,5 +35,8 @@ export function parseTaskPayload(raw) {
     throw new Error('AI response labels must be an array of strings.');
   }
   const labels = obj.labels.filter((l) => typeof l === 'string');
-  return { title: obj.title.trim(), description: obj.description.trim(), labels };
+  // Strip conventional commit prefix from title so Jira gets a plain task title
+  const rawTitle = (obj.title || '').trim();
+  const title = rawTitle.replace(/^(feat|fix|chore|docs|style|refactor|test|build|ci):\s*/i, '').trim() || rawTitle;
+  return { title, description: obj.description.trim(), labels };
 }
