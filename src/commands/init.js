@@ -48,6 +48,7 @@ export async function runInit() {
     const jiraBaseUrl = await question(rl, 'Jira base URL', 'https://your-domain.atlassian.net');
     const jiraProjectKey = await question(rl, 'Jira project key', 'PROJ');
     const jiraIssueType = await question(rl, 'Jira issue type', 'Task');
+    const jiraTransitionToStatus = await question(rl, 'Transition issue to status after create (e.g. Done, To Do, In Progress)', 'Done');
     const aiProvider = await question(rl, 'AI provider (groq | deepseek | openai)', 'groq');
     const allowedBranchesStr = await question(rl, 'Allowed branches (comma-separated)', 'main,develop,master');
     const commitPrefixesStr = await question(rl, 'Commit prefixes (comma-separated)', 'feat,fix,chore');
@@ -57,7 +58,12 @@ export async function runInit() {
     const model = DEFAULT_MODELS[aiProvider.toLowerCase()] || DEFAULT_MODELS.groq;
 
     const config = {
-      jira: { baseUrl: jiraBaseUrl, projectKey: jiraProjectKey, issueType: jiraIssueType },
+      jira: {
+        baseUrl: jiraBaseUrl,
+        projectKey: jiraProjectKey,
+        issueType: jiraIssueType,
+        transitionToStatus: (jiraTransitionToStatus || 'Done').trim() || 'Done',
+      },
       ai: { provider: aiProvider.toLowerCase(), model },
       rules: { allowedBranches, commitPrefixes },
     };

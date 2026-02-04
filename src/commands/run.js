@@ -8,6 +8,8 @@ import { runPipeline } from '../core/pipeline.js';
 
 export async function runRun(options = {}) {
   const dry = options.dry ?? false;
+  const type = options.type?.trim() || undefined;
+  const status = options.status?.trim() || undefined;
 
   let config;
   try {
@@ -19,7 +21,7 @@ export async function runRun(options = {}) {
   }
 
   try {
-    const result = await runPipeline(config, { dry });
+    const result = await runPipeline(config, { dry, issueType: type, transitionToStatus: status });
 
     if (!result.ok) {
       console.error(result.error || 'Pipeline failed.');

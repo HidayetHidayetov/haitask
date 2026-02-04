@@ -4,3 +4,5 @@ node_modules/
 .DS_Store
 PUBLISH.md
 DEPLOY.md
+CONFIG_OPTIONS.md
+Project_tech_doc.md

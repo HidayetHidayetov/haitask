@@ -11,6 +11,7 @@ const DEFAULT_RC = {
     baseUrl: 'https://your-domain.atlassian.net',
     projectKey: 'PROJ',
     issueType: 'Task',
+    transitionToStatus: 'Done',
   },
   ai: {
     provider: 'groq',

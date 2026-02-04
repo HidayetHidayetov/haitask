@@ -1,6 +1,6 @@
 {
   "name": "haitask",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Hidayet AI Task — Generate Jira tasks from Git commits using AI",
   "type": "module",
   "main": "src/index.js",

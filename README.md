@@ -34,7 +34,7 @@ git clone https://github.com/HidayetHidayetov/haitask.git && cd haitask && npm i
    cd /path/to/your/repo
    haitask init
    ```
-   **Interactive setup:** you’ll be asked for Jira base URL, project key, issue type, AI provider (groq / deepseek / openai), allowed branches, and commit prefixes. A `.haitaskrc` file is created from your answers. You’ll then choose where to store API keys: **this project** (`.env` in the repo) or **global** (`~/.haitask/.env`, shared across projects). A template `.env` is created in the chosen place — add your own keys there (never commit real keys).
+   **Interactive setup:** you’ll be asked for Jira base URL, project key, issue type, transition-to status after create (e.g. Done, To Do), AI provider (groq / deepseek / openai), allowed branches, and commit prefixes. A `.haitaskrc` file is created from your answers. You’ll then choose where to store API keys: **this project** (`.env` in the repo) or **global** (`~/.haitask/.env`, shared across projects). A template `.env` is created in the chosen place — add your own keys there (never commit real keys).
 
 2. **Add your API keys**  
    Edit the `.env` that was created (project or `~/.haitask/.env`): set one AI key (`GROQ_API_KEY`, `DEEPSEEK_API_KEY`, or `OPENAI_API_KEY`) and Jira keys (`JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`). Optional: `JIRA_ACCOUNT_ID` to auto-assign issues.
@@ -56,12 +56,14 @@ git clone https://github.com/HidayetHidayetov/haitask.git && cd haitask && npm i
 | `haitask init` | Interactive setup: prompts for Jira/AI/rules → writes `.haitaskrc`, optional `.env` (project or ~/.haitask/.env). |
 | `haitask run` | Run pipeline: Git → AI → Jira (create issue). |
 | `haitask run --dry` | Same as above but skips the Jira API call. |
+| `haitask run --type <type>` | Same as `run` but use this Jira issue type (e.g. `Task`, `Bug`, `Story`, `Sub-task`). Overrides `jira.issueType` in `.haitaskrc` for this run only. |
+| `haitask run --status <status>` | Same as `run` but transition the issue to this status after create (e.g. `Done`, `To Do`, `In Progress`). Overrides `jira.transitionToStatus` in `.haitaskrc` for this run only. |
 
 ---
 
 ## Configuration
 
-- **`.haitaskrc`** (project root): Jira `baseUrl`, `projectKey`, `issueType`; AI `provider` and `model`; `rules.allowedBranches` and `rules.commitPrefixes`. Single source of truth for behaviour.
+- **`.haitaskrc`** (project root): Jira `baseUrl`, `projectKey`, `issueType`, `transitionToStatus`; AI `provider` and `model`; `rules.allowedBranches` and `rules.commitPrefixes`. Single source of truth for behaviour. **Issue type:** Default is `jira.issueType` (set at `haitask init` or edit `.haitaskrc`). Override for a single run with `haitask run --type Bug` (or `Story`, `Sub-task`, etc.). **Status after create:** Default is `jira.transitionToStatus` (e.g. `Done`). Override for a single run with `haitask run --status "To Do"` or `--status "In Progress"`.
 - **`.env`**: API keys only. Loaded in order: **project** `.env` (current directory), then **global** `~/.haitask/.env`. So you can use one global `.env` for all projects or override per repo.
 
 **AI providers** (set `ai.provider` in `.haitaskrc`): `groq` (default, free), `deepseek` (free), `openai` (paid). Set the corresponding key in `.env`.
@@ -81,3 +83,10 @@ git clone https://github.com/HidayetHidayetov/haitask.git && cd haitask && npm i
 - **CI / scripts:** Run `npx haitask run` (or `haitask run` if installed) from the repo root; ensure `.haitaskrc` and env vars are available in that environment.
 
 No framework-specific setup (e.g. Laravel, React, etc.); the tool only depends on Git and the config files above.
+
+---
+
+## Troubleshooting
+
+**Assignee not set / still unassigned**  
+In Jira Cloud, the user in `JIRA_ACCOUNT_ID` must be an **Assignable user** in that project, or the assign API will not apply (or will succeed but leave the issue unassigned). Fix: **Project → Space settings → People** — add yourself to the project (team-managed). For company-managed projects, ensure the permission scheme grants you **Assignable user**. You can still assign the issue to yourself manually in Jira; the API can only assign to users who are assignable in the project.

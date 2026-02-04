@@ -10,16 +10,23 @@
 export function buildPrompt(commitData) {
   const { message, branch, repoName } = commitData;
   const system = `You generate a Jira task from a Git commit. Reply with a single JSON object only, no markdown or extra text.
-Keys: "title" (short Jira task title, plain language — do NOT include prefixes like feat:, fix:, chore: in the title), "description" (detailed description, string), "labels" (array of strings, e.g. ["auto", "commit"]).`;
+
+Keys:
+- "title": Short, formal Jira task summary (professional wording). Do NOT copy the commit message verbatim. Rewrite as a clear, formal task title suitable for Jira (e.g. "Add user login validation" not "test login stuff"). Do NOT include prefixes like feat:, fix:, chore: in the title.
+- "description": Detailed description in plain language, suitable for Jira. Expand and formalize the intent of the commit; do not just paste the commit message.
+- "labels": Array of strings, e.g. ["auto", "commit"].
+- "priority": One of: "Highest", "High", "Medium", "Low", "Lowest". Infer from commit message (e.g. "urgent", "critical", "hotfix" → High; "minor", "tweak" → Low; unclear → "Medium"). Default to "Medium" if unsure.`;
   const user = `Repo: ${repoName}\nBranch: ${branch}\nCommit message:\n${message}\n\nGenerate the JSON object.`;
   return { system, user };
 }
 
+const VALID_PRIORITIES = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
+
 /**
- * Parse and validate AI response. Expects { title, description, labels }.
+ * Parse and validate AI response. Expects { title, description, labels, priority? }.
  * @param {string} raw
- * @returns {{ title: string, description: string, labels: string[] }}
- * @throws {Error} If invalid JSON or missing/ wrong types
+ * @returns {{ title: string, description: string, labels: string[], priority: string }}
+ * @throws {Error} If invalid JSON or missing/wrong types
  */
 export function parseTaskPayload(raw) {
   let obj;
@@ -35,8 +42,9 @@ export function parseTaskPayload(raw) {
     throw new Error('AI response labels must be an array of strings.');
   }
   const labels = obj.labels.filter((l) => typeof l === 'string');
-  // Strip conventional commit prefix from title so Jira gets a plain task title
   const rawTitle = (obj.title || '').trim();
   const title = rawTitle.replace(/^(feat|fix|chore|docs|style|refactor|test|build|ci):\s*/i, '').trim() || rawTitle;
-  return { title, description: obj.description.trim(), labels };
+  const rawPriority = (obj.priority || 'Medium').trim();
+  const priority = VALID_PRIORITIES.includes(rawPriority) ? rawPriority : 'Medium';
+  return { title, description: obj.description.trim(), labels, priority };
 }

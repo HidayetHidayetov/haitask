@@ -44,11 +44,11 @@ function validateRules(commitData, config) {
 /**
  * Run full pipeline: Git → validate → AI → Jira (unless dry).
  * @param {object} config - Loaded .haitaskrc
- * @param {{ dry?: boolean }} options - dry: skip Jira API call
+ * @param {{ dry?: boolean, issueType?: string, transitionToStatus?: string }} options
  * @returns {Promise<{ ok: boolean, dry?: boolean, key?: string, payload?: object, commitData?: object, error?: string }>}
  */
 export async function runPipeline(config, options = {}) {
-  const { dry = false } = options;
+  const { dry = false, issueType: typeOverride, transitionToStatus: statusOverride } = options;
 
   const commitData = await getLatestCommitData();
   validateRules(commitData, config);
@@ -59,6 +59,17 @@ export async function runPipeline(config, options = {}) {
     return { ok: true, dry: true, payload, commitData };
   }
 
-  const { key } = await createIssue(payload, config);
+  let jiraConfig = config;
+  if (typeOverride != null || statusOverride != null) {
+    jiraConfig = {
+      ...config,
+      jira: {
+        ...config.jira,
+        ...(typeOverride != null && { issueType: typeOverride }),
+        ...(statusOverride != null && { transitionToStatus: statusOverride }),
+      },
+    };
+  }
+  const { key } = await createIssue(payload, jiraConfig);
   return { ok: true, key, payload, commitData };
 }
