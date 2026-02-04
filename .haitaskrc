@@ -1,12 +1,12 @@
 {
   "jira": {
-    "baseUrl": "https://your-domain.atlassian.net",
-    "projectKey": "PROJ",
+    "baseUrl": "https://azerishiqprogrammingteam.atlassian.net",
+    "projectKey": "EM",
     "issueType": "Task"
   },
   "ai": {
-    "provider": "openai",
-    "model": "gpt-4o-mini"
+    "provider": "groq",
+    "model": "llama-3.1-8b-instant"
   },
   "rules": {
     "allowedBranches": [

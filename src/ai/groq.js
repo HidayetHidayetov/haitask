@@ -1,27 +1,31 @@
 /**
- * OpenAI provider implementation.
+ * Groq provider (free tier, fast inference).
+ * API: https://api.groq.com/openai/v1/chat/completions (OpenAI-compatible)
+ * Docs: https://console.groq.com/docs
  */
 
 import { buildPrompt, parseTaskPayload } from './utils.js';
 
-const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 /**
- * Call OpenAI and return task payload for Jira.
+ * Call Groq and return task payload for Jira.
  * @param {{ message: string, branch: string, repoName: string }} commitData
  * @param {{ ai: { model?: string } }} config
  * @returns {Promise<{ title: string, description: string, labels: string[] }>}
  */
-export async function generateOpenAI(commitData, config) {
-  const apiKey = process.env.OPENAI_API_KEY;
+export async function generateGroq(commitData, config) {
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey?.trim()) {
-    throw new Error('OPENAI_API_KEY is not set. Add it to .env.');
+    throw new Error(
+      'GROQ_API_KEY is not set. Add it to .env. Get free key at https://console.groq.com/keys'
+    );
   }
 
-  const model = config?.ai?.model || 'gpt-4o-mini';
+  const model = config?.ai?.model || 'llama-3.1-8b-instant';
   const { system, user } = buildPrompt(commitData);
 
-  const response = await fetch(OPENAI_API_URL, {
+  const response = await fetch(GROQ_API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -39,13 +43,13 @@ export async function generateOpenAI(commitData, config) {
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`OpenAI API error ${response.status}: ${body || response.statusText}`);
+    throw new Error(`Groq API error ${response.status}: ${body || response.statusText}`);
   }
 
   const data = await response.json();
   const content = data?.choices?.[0]?.message?.content;
   if (typeof content !== 'string') {
-    throw new Error('OpenAI response missing choices[0].message.content');
+    throw new Error('Groq response missing choices[0].message.content');
   }
 
   return parseTaskPayload(content.trim());

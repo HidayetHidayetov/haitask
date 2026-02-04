@@ -5,7 +5,7 @@
  */
 
 import { getLatestCommitData } from '../git/commit.js';
-import { generateTaskPayload } from '../ai/openai.js';
+import { generateTaskPayload } from '../ai/index.js';
 import { createIssue } from '../jira/client.js';
 
 /**

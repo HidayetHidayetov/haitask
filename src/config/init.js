@@ -14,8 +14,8 @@ const DEFAULT_RC = {
     issueType: 'Task',
   },
   ai: {
-    provider: 'openai',
-    model: 'gpt-4o-mini',
+    provider: 'groq',
+    model: 'llama-3.1-8b-instant',
   },
   rules: {
     allowedBranches: ['main', 'develop', 'master'],
@@ -23,7 +23,8 @@ const DEFAULT_RC = {
   },
 };
 
-const REQUIRED_ENV_KEYS = ['OPENAI_API_KEY', 'JIRA_BASE_URL', 'JIRA_EMAIL', 'JIRA_API_TOKEN'];
+// Note: Only Jira keys are required. AI key depends on provider (DEEPSEEK_API_KEY or OPENAI_API_KEY)
+const REQUIRED_ENV_KEYS = ['JIRA_BASE_URL', 'JIRA_EMAIL', 'JIRA_API_TOKEN'];
 
 /**
  * Create .haitaskrc in dir if it does not exist.
@@ -41,12 +42,30 @@ export function createDefaultConfigFile(dir = process.cwd()) {
 
 /**
  * Load .env from dir and check required keys.
+ * If config is provided, also validates AI provider key.
  * @param {string} [dir] - Directory (default: process.cwd())
+ * @param {object} [config] - Optional config to check AI provider key
  * @returns {{ valid: boolean, missing: string[] }}
  */
-export function validateEnv(dir = process.cwd()) {
+export function validateEnv(dir = process.cwd(), config = null) {
   const envPath = resolve(dir, '.env');
   loadEnv({ path: envPath });
-  const missing = REQUIRED_ENV_KEYS.filter((key) => !process.env[key]?.trim());
-  return { valid: missing.length === 0, missing };
+  const missing = [...REQUIRED_ENV_KEYS];
+
+  // Check AI provider key if config provided
+  if (config?.ai?.provider) {
+    const provider = config.ai.provider.toLowerCase();
+    const aiKeys = {
+      openai: 'OPENAI_API_KEY',
+      deepseek: 'DEEPSEEK_API_KEY',
+      groq: 'GROQ_API_KEY',
+    };
+    const aiKey = aiKeys[provider];
+    if (aiKey && !process.env[aiKey]?.trim()) {
+      missing.push(aiKey);
+    }
+  }
+
+  const filtered = missing.filter((key) => !process.env[key]?.trim());
+  return { valid: filtered.length === 0, missing: filtered };
 }

@@ -1,27 +1,29 @@
 /**
- * OpenAI provider implementation.
+ * Deepseek Chat provider (free tier, JSON mode supported).
+ * API: https://api.deepseek.com/v1/chat/completions
+ * Docs: https://platform.deepseek.com/api-docs/
  */
 
 import { buildPrompt, parseTaskPayload } from './utils.js';
 
-const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
 /**
- * Call OpenAI and return task payload for Jira.
+ * Call Deepseek and return task payload for Jira.
  * @param {{ message: string, branch: string, repoName: string }} commitData
  * @param {{ ai: { model?: string } }} config
  * @returns {Promise<{ title: string, description: string, labels: string[] }>}
  */
-export async function generateOpenAI(commitData, config) {
-  const apiKey = process.env.OPENAI_API_KEY;
+export async function generateDeepseek(commitData, config) {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey?.trim()) {
-    throw new Error('OPENAI_API_KEY is not set. Add it to .env.');
+    throw new Error('DEEPSEEK_API_KEY is not set. Add it to .env. Get free key at https://platform.deepseek.com/');
   }
 
-  const model = config?.ai?.model || 'gpt-4o-mini';
+  const model = config?.ai?.model || 'deepseek-chat';
   const { system, user } = buildPrompt(commitData);
 
-  const response = await fetch(OPENAI_API_URL, {
+  const response = await fetch(DEEPSEEK_API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -39,13 +41,13 @@ export async function generateOpenAI(commitData, config) {
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`OpenAI API error ${response.status}: ${body || response.statusText}`);
+    throw new Error(`Deepseek API error ${response.status}: ${body || response.statusText}`);
   }
 
   const data = await response.json();
   const content = data?.choices?.[0]?.message?.content;
   if (typeof content !== 'string') {
-    throw new Error('OpenAI response missing choices[0].message.content');
+    throw new Error('Deepseek response missing choices[0].message.content');
   }
 
   return parseTaskPayload(content.trim());

@@ -28,7 +28,9 @@ function plainTextToAdf(text) {
  * @throws {Error} On missing env, HTTP error, or invalid response
  */
 export async function createIssue(payload, config) {
-  const baseUrl = (process.env.JIRA_BASE_URL || config?.jira?.baseUrl || '').replace(/\/$/, '');
+  // Spec: .haitaskrc is the source of truth for Jira baseUrl.
+  // .env should hold credentials (email/token), not routing.
+  const baseUrl = (config?.jira?.baseUrl || process.env.JIRA_BASE_URL || '').replace(/\/$/, '');
   const email = process.env.JIRA_EMAIL;
   const token = process.env.JIRA_API_TOKEN;
 

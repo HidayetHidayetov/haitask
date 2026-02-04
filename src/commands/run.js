@@ -37,7 +37,8 @@ export async function runRun(options = {}) {
       return;
     }
 
-    const baseUrl = (process.env.JIRA_BASE_URL || config?.jira?.baseUrl || '').replace(/\/$/, '');
+    // Keep output URL consistent with Jira client behavior (prefer .haitaskrc baseUrl).
+    const baseUrl = (config?.jira?.baseUrl || process.env.JIRA_BASE_URL || '').replace(/\/$/, '');
     const issueUrl = baseUrl ? `${baseUrl}/browse/${result.key}` : result.key;
     console.log('Created Jira issue:', result.key);
     if (issueUrl !== result.key) {
