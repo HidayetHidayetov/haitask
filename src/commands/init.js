@@ -97,19 +97,19 @@ export async function runInit() {
     rl.close();
   }
 
-  let config;
+  let loadedConfig = null;
   try {
-    config = loadConfig();
+    loadedConfig = loadConfig();
   } catch {
-    config = null;
+    // rc just written; load may fail if cwd changed
   }
 
-  const { valid, missing } = validateEnv(cwd, config);
+  const { valid, missing } = validateEnv(cwd, loadedConfig);
   if (!valid) {
     console.warn('\nAdd these to your .env before "haitask run":', missing.join(', '));
     console.log('Env is read from: project .env, then ~/.haitask/.env');
-    if (config?.ai?.provider === 'groq') console.log('Groq key: https://console.groq.com/keys');
-    if (config?.ai?.provider === 'deepseek') console.log('Deepseek key: https://platform.deepseek.com/');
+    if (loadedConfig?.ai?.provider === 'groq') console.log('Groq key: https://console.groq.com/keys');
+    if (loadedConfig?.ai?.provider === 'deepseek') console.log('Deepseek key: https://platform.deepseek.com/');
     process.exitCode = 1;
     return;
   }

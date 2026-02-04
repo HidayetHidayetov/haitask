@@ -59,17 +59,23 @@ export async function runPipeline(config, options = {}) {
     return { ok: true, dry: true, payload, commitData };
   }
 
-  let jiraConfig = config;
-  if (typeOverride != null || statusOverride != null) {
-    jiraConfig = {
-      ...config,
-      jira: {
-        ...config.jira,
-        ...(typeOverride != null && { issueType: typeOverride }),
-        ...(statusOverride != null && { transitionToStatus: statusOverride }),
-      },
-    };
-  }
+  const jiraConfig = mergeJiraOverrides(config, { issueType: typeOverride, transitionToStatus: statusOverride });
   const { key } = await createIssue(payload, jiraConfig);
   return { ok: true, key, payload, commitData };
+}
+
+/**
+ * Merge run-time overrides into config.jira. Returns config unchanged if no overrides.
+ */
+function mergeJiraOverrides(config, overrides) {
+  const { issueType, transitionToStatus } = overrides;
+  if (issueType == null && transitionToStatus == null) return config;
+  return {
+    ...config,
+    jira: {
+      ...config.jira,
+      ...(issueType != null && { issueType }),
+      ...(transitionToStatus != null && { transitionToStatus }),
+    },
+  };
 }

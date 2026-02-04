@@ -1,10 +1,15 @@
 /**
- * haitask run [--dry] — Execute full pipeline
+ * haitask run — Execute full pipeline (Git → AI → Jira).
  * Thin handler: load config, call pipeline, output result.
  */
 
 import { loadConfig } from '../config/load.js';
 import { runPipeline } from '../core/pipeline.js';
+
+function buildIssueUrl(config, issueKey) {
+  const baseUrl = (config?.jira?.baseUrl || process.env.JIRA_BASE_URL || '').replace(/\/$/, '');
+  return baseUrl ? `${baseUrl}/browse/${issueKey}` : issueKey;
+}
 
 export async function runRun(options = {}) {
   const dry = options.dry ?? false;
@@ -34,18 +39,15 @@ export async function runRun(options = {}) {
       console.log('Commit:', result.commitData?.message?.split('\n')[0] || '');
       console.log('Would create Jira task:', result.payload?.title || '');
       if (result.payload?.description) {
-        console.log('Description (preview):', result.payload.description.slice(0, 120) + (result.payload.description.length > 120 ? '...' : ''));
+        const desc = result.payload.description;
+        console.log('Description (preview):', desc.slice(0, 120) + (desc.length > 120 ? '...' : ''));
       }
       return;
     }
 
-    // Keep output URL consistent with Jira client behavior (prefer .haitaskrc baseUrl).
-    const baseUrl = (config?.jira?.baseUrl || process.env.JIRA_BASE_URL || '').replace(/\/$/, '');
-    const issueUrl = baseUrl ? `${baseUrl}/browse/${result.key}` : result.key;
     console.log('Created Jira issue:', result.key);
-    if (issueUrl !== result.key) {
-      console.log(issueUrl);
-    }
+    const issueUrl = buildIssueUrl(config, result.key);
+    if (issueUrl !== result.key) console.log(issueUrl);
   } catch (err) {
     console.error('Error:', err.message);
     process.exitCode = 1;

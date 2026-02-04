@@ -29,14 +29,12 @@ const REQUIRED_ENV_KEYS = ['JIRA_BASE_URL', 'JIRA_EMAIL', 'JIRA_API_TOKEN'];
 /**
  * Create .haitaskrc in dir if it does not exist.
  * @param {string} [dir] - Directory (default: process.cwd())
- * @returns {{ created: boolean }} created true if file was written, false if already existed
+ * @returns {{ created: boolean }}
  */
 export function createDefaultConfigFile(dir = process.cwd()) {
-  const path = resolve(dir, '.haitaskrc');
-  if (existsSync(path)) {
-    return { created: false };
-  }
-  writeFileSync(path, JSON.stringify(DEFAULT_RC, null, 2), 'utf-8');
+  const rcPath = resolve(dir, '.haitaskrc');
+  if (existsSync(rcPath)) return { created: false };
+  writeFileSync(rcPath, JSON.stringify(DEFAULT_RC, null, 2), 'utf-8');
   return { created: true };
 }
 

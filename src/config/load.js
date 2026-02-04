@@ -6,36 +6,36 @@
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
-const DEFAULT_CONFIG_PATH = '.haitaskrc';
-
+const CONFIG_FILENAME = '.haitaskrc';
 const REQUIRED_KEYS = ['jira', 'ai', 'rules'];
 
 /**
+ * Load and validate .haitaskrc.
  * @param {string} [configPath] - Absolute or cwd-relative path to .haitaskrc
  * @returns {object} Parsed config
  * @throws {Error} If file missing, invalid JSON, or missing required sections
  */
 export function loadConfig(configPath) {
-  const path = configPath
+  const filePath = configPath
     ? resolve(configPath)
-    : resolve(process.cwd(), DEFAULT_CONFIG_PATH);
+    : resolve(process.cwd(), CONFIG_FILENAME);
 
-  if (!existsSync(path)) {
-    throw new Error(`Config not found: ${path}. Run "haitask init" first.`);
+  if (!existsSync(filePath)) {
+    throw new Error(`Config not found: ${filePath}. Run "haitask init" first.`);
   }
 
   let raw;
   try {
-    raw = readFileSync(path, 'utf-8');
+    raw = readFileSync(filePath, 'utf-8');
   } catch (err) {
-    throw new Error(`Cannot read config: ${path}. ${err.message}`);
+    throw new Error(`Cannot read config: ${filePath}. ${err.message}`);
   }
 
   let config;
   try {
     config = JSON.parse(raw);
   } catch (err) {
-    throw new Error(`Invalid JSON in ${path}. ${err.message}`);
+    throw new Error(`Invalid JSON in ${filePath}. ${err.message}`);
   }
 
   const missing = REQUIRED_KEYS.filter((key) => !config[key] || typeof config[key] !== 'object');

@@ -3,6 +3,23 @@
  * Jira Cloud REST API v3.
  */
 
+const ASSIGN_DELAY_MS = 4000;
+const DEFAULT_PROJECT_KEY = 'PROJ';
+const DEFAULT_ISSUE_TYPE = 'Task';
+const DEFAULT_TRANSITION_STATUS = 'Done';
+const VALID_PRIORITIES = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
+
+const ASSIGNABLE_HINT =
+  'In Jira Cloud the assignee must be an "Assignable user" in the project: Project → Space settings → People.';
+
+function jiraHeaders(auth) {
+  return {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    Authorization: `Basic ${auth}`,
+  };
+}
+
 function plainTextToAdf(text) {
   const paragraphs = (text || '').trim().split(/\n+/).filter(Boolean);
   const content = paragraphs.length
@@ -10,9 +27,6 @@ function plainTextToAdf(text) {
     : [{ type: 'paragraph', content: [{ type: 'text', text: '' }] }];
   return { type: 'doc', version: 1, content };
 }
-
-const ASSIGNABLE_HINT =
-  'In Jira Cloud the assignee must be an "Assignable user" in the project: Project → Space settings → People.';
 
 function getAssigneeAccountId(config) {
   const fromConfig = (config?.jira?.assigneeAccountId || '').trim();
@@ -54,12 +68,7 @@ async function assignIssue(baseUrl, issueKey, accountId, auth) {
     return { ok: false, message: 'No assignee accountId. Set JIRA_ACCOUNT_ID in .env (full format: "712020:uuid").' };
   }
 
-  const headers = {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    Authorization: `Basic ${auth}`,
-  };
-
+  const headers = jiraHeaders(auth);
   const assignUrl = `${baseUrl}/rest/api/3/issue/${encodeURIComponent(issueKey)}/assignee`;
   let res = await fetch(assignUrl, {
     method: 'PUT',
@@ -105,11 +114,7 @@ async function transitionToStatus(baseUrl, issueKey, auth, statusName) {
   const name = (statusName || '').trim();
   if (!name) return;
 
-  const headers = {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    Authorization: `Basic ${auth}`,
-  };
+  const headers = jiraHeaders(auth);
   const transRes = await fetch(
     `${baseUrl}/rest/api/3/issue/${encodeURIComponent(issueKey)}/transitions`,
     { headers: { Accept: 'application/json', Authorization: `Basic ${auth}` } }
@@ -128,8 +133,6 @@ async function transitionToStatus(baseUrl, issueKey, auth, statusName) {
     body: JSON.stringify({ transition: { id: transition.id } }),
   });
 }
-
-const VALID_PRIORITIES = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
 
 function normalizePriority(value) {
   const v = (value || '').trim();
@@ -154,10 +157,11 @@ export async function createIssue(payload, config) {
     throw new Error('Jira credentials missing. Set JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN in .env.');
   }
 
-  const projectKey = config?.jira?.projectKey || 'PROJ';
-  const issueType = config?.jira?.issueType || 'Task';
+  const projectKey = config?.jira?.projectKey || DEFAULT_PROJECT_KEY;
+  const issueType = config?.jira?.issueType || DEFAULT_ISSUE_TYPE;
   const rawStatus = config?.jira?.transitionToStatus;
-  const transitionToStatusName = rawStatus === undefined || rawStatus === null ? 'Done' : String(rawStatus).trim();
+  const transitionToStatusName =
+    rawStatus === undefined || rawStatus === null ? DEFAULT_TRANSITION_STATUS : String(rawStatus).trim();
   const auth = Buffer.from(`${email}:${token}`, 'utf-8').toString('base64');
 
   let assigneeAccountId = getAssigneeAccountId(config);
@@ -181,7 +185,7 @@ export async function createIssue(payload, config) {
   let fields = { ...baseFields, priority: { name: priorityName } };
   let createRes = await fetch(`${baseUrl}/rest/api/3/issue`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: `Basic ${auth}` },
+    headers: jiraHeaders(auth),
     body: JSON.stringify({ fields }),
   });
 
@@ -196,7 +200,7 @@ export async function createIssue(payload, config) {
       if (isPriority || isAssignee) {
         createRes = await fetch(`${baseUrl}/rest/api/3/issue`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: `Basic ${auth}` },
+          headers: jiraHeaders(auth),
           body: JSON.stringify({ fields: retryFields }),
         });
       }
@@ -211,8 +215,7 @@ export async function createIssue(payload, config) {
   const key = data?.key;
   if (!key) throw new Error('Jira API response missing issue key.');
 
-  // Wait 4s before assign: Jira (e.g. next-gen) may need a moment before assignee API applies
-  await new Promise((r) => setTimeout(r, 2000));
+  await new Promise((r) => setTimeout(r, ASSIGN_DELAY_MS));
 
   const assignResult = await assignIssue(baseUrl, key, assigneeAccountId, auth);
   if (!assignResult.ok) {

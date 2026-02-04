@@ -2,6 +2,8 @@
  * Shared AI utilities: prompt building and response parsing.
  */
 
+const CONVENTIONAL_PREFIXES = /^(feat|fix|chore|docs|style|refactor|test|build|ci):\s*/i;
+
 /**
  * Build system + user prompt from commit data.
  * @param {{ message: string, branch: string, repoName: string }} commitData
@@ -43,7 +45,7 @@ export function parseTaskPayload(raw) {
   }
   const labels = obj.labels.filter((l) => typeof l === 'string');
   const rawTitle = (obj.title || '').trim();
-  const title = rawTitle.replace(/^(feat|fix|chore|docs|style|refactor|test|build|ci):\s*/i, '').trim() || rawTitle;
+  const title = rawTitle.replace(CONVENTIONAL_PREFIXES, '').trim() || rawTitle;
   const rawPriority = (obj.priority || 'Medium').trim();
   const priority = VALID_PRIORITIES.includes(rawPriority) ? rawPriority : 'Medium';
   return { title, description: obj.description.trim(), labels, priority };

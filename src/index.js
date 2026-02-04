@@ -1,15 +1,20 @@
 #!/usr/bin/env node
 
+import { createRequire } from 'node:module';
 import { loadEnvFiles } from './config/env-loader.js';
-loadEnvFiles();
 import { program } from 'commander';
 import { runInit } from './commands/init.js';
 import { runRun } from './commands/run.js';
 
+loadEnvFiles();
+
+const require = createRequire(import.meta.url);
+const pkg = require('../package.json');
+
 program
   .name('haitask')
   .description('HAITASK — Generate Jira tasks from Git commits using AI')
-  .version('0.1.4');
+  .version(pkg.version);
 
 program
   .command('init')

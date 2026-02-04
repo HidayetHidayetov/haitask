@@ -1,5 +1,4 @@
 /**
- * Shared utilities (if any).
+ * Shared utilities. Add helpers here when used by multiple modules.
  */
-
-export function noop() { }
+export { };
