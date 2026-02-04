@@ -18,7 +18,7 @@ const DEFAULT_RC = {
     model: 'gpt-4o-mini',
   },
   rules: {
-    allowedBranches: ['main', 'develop'],
+    allowedBranches: ['main', 'develop', 'master'],
     commitPrefixes: ['feat', 'fix', 'chore'],
   },
 };

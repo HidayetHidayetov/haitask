@@ -28,3 +28,7 @@ haitask run --dry   # Dry run (no Jira API call)
 ## Configuration
 
 See `.haitaskrc` (created by `haitask init`) and `Project_tech_doc.md` for full spec.
+
+- **Rules:** `allowedBranches` and `commitPrefixes` in `.haitaskrc` control when the pipeline runs. Add your branch (e.g. `master`) to `allowedBranches` if you get a branch validation error.
+- **OpenAI 429:** "insufficient_quota" means your OpenAI account billing/quota limit; check [OpenAI usage](https://platform.openai.com/usage).
+- **Jira:** Ensure `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN` in `.env` match your Jira Cloud site.
