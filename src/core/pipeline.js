@@ -4,12 +4,15 @@
  * Returns structured result for CLI to display.
  */
 
-import { getLatestCommitData } from '../git/commit.js';
+import { getLatestCommitData, getLatestCommitsData } from '../git/commit.js';
 import { generateTaskPayload } from '../ai/index.js';
 import { createTask } from '../backend/index.js';
 
+const BATCH_SEP = '\n\n---\n\n';
+
 /**
  * Validate branch and commit prefix from config.rules.
+ * For batch (message contains BATCH_SEP), prefix is checked on the latest (first) commit only.
  * @param {{ message: string, branch: string }} commitData
  * @param {{ rules?: { allowedBranches?: string[], commitPrefixes?: string[] } }} config
  * @throws {Error} If validation fails
@@ -29,7 +32,8 @@ export function validateRules(commitData, config) {
   }
 
   if (Array.isArray(commitPrefixes) && commitPrefixes.length > 0) {
-    const trimmed = (message || '').trim();
+    const toCheck = message.includes(BATCH_SEP) ? message.split(BATCH_SEP)[0] : message;
+    const trimmed = (toCheck || '').trim();
     const hasPrefix = commitPrefixes.some(
       (p) => trimmed.startsWith(p + ':') || trimmed.startsWith(p + ' ')
     );
@@ -44,13 +48,14 @@ export function validateRules(commitData, config) {
 /**
  * Run full pipeline: Git → validate → AI → target (unless dry).
  * @param {object} config - Loaded .haitaskrc
- * @param {{ dry?: boolean, issueType?: string, transitionToStatus?: string }} options
+ * @param {{ dry?: boolean, issueType?: string, transitionToStatus?: string, commits?: number }} options
  * @returns {Promise<{ ok: boolean, dry?: boolean, key?: string, url?: string, payload?: object, commitData?: object, error?: string }>}
  */
 export async function runPipeline(config, options = {}) {
-  const { dry = false, issueType: typeOverride, transitionToStatus: statusOverride } = options;
+  const { dry = false, issueType: typeOverride, transitionToStatus: statusOverride, commits: commitsOpt } = options;
+  const numCommits = Math.max(1, Number(commitsOpt) || 1);
 
-  const commitData = await getLatestCommitData();
+  const commitData = numCommits > 1 ? await getLatestCommitsData(numCommits) : await getLatestCommitData();
   validateRules(commitData, config);
 
   const payload = await generateTaskPayload(commitData, config);

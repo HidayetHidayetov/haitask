@@ -61,6 +61,7 @@ git clone https://github.com/HidayetHidayetov/haitask.git && cd haitask && npm i
 | `haitask init` | Interactive setup: target (Jira/Trello), then target + AI + rules → writes `.haitaskrc`, optional `.env`. |
 | `haitask run` | Run pipeline: Git → AI → target (create Jira issue or Trello card). |
 | `haitask run --dry` | Same as above but skips creating the task. |
+| `haitask run --commits <n>` | Combine last N commits into one task (default: 1). Example: `--commits 3`. |
 | `haitask run --type <type>` | (Jira only) Override issue type for this run (e.g. `Task`, `Bug`, `Story`). |
 | `haitask run --status <status>` | (Jira only) Override transition-to status after create (e.g. `Done`, `To Do`, `In Progress`). |
 
@@ -97,7 +98,7 @@ No framework-specific setup (e.g. Laravel, React, etc.); the tool only depends o
 
 ## What's next (roadmap)
 
-- **Batch:** Create one task from multiple commits (e.g. last N commits).
+- **Batch:** ✅ Implemented — use `haitask run --commits N` to create one task from the last N commits.
 - **Link to existing issue:** If the commit message contains an issue key (e.g. `PROJ-123`), add the commit as a comment to that issue instead of creating a new one.
 - **More targets:** Linear, Asana, or others (same adapter pattern).
 

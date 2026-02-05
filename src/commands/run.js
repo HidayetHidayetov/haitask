@@ -17,6 +17,7 @@ export async function runRun(options = {}) {
   const dry = options.dry ?? false;
   const type = options.type?.trim() || undefined;
   const status = options.status?.trim() || undefined;
+  const commits = options.commits != null ? Number(options.commits) : 1;
 
   let config;
   try {
@@ -28,7 +29,7 @@ export async function runRun(options = {}) {
   }
 
   try {
-    const result = await runPipeline(config, { dry, issueType: type, transitionToStatus: status });
+    const result = await runPipeline(config, { dry, issueType: type, transitionToStatus: status, commits });
 
     if (!result.ok) {
       console.error(result.error || 'Pipeline failed.');
@@ -38,7 +39,9 @@ export async function runRun(options = {}) {
 
     if (result.dry) {
       console.log('Dry run — no task created.');
-      console.log('Commit:', result.commitData?.message?.split('\n')[0] || '');
+      const msg = result.commitData?.message || '';
+      const preview = msg.includes('\n\n---\n\n') ? `${result.commitData?.count ?? '?'} commits` : msg.split('\n')[0] || '';
+      console.log('Commit(s):', preview);
       console.log('Would create task:', result.payload?.title || '');
       if (result.payload?.description) {
         const desc = result.payload.description;

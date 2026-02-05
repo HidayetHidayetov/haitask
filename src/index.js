@@ -23,10 +23,11 @@ program
 
 program
   .command('run')
-  .description('Run full pipeline: Git → AI → Jira')
-  .option('--dry', 'Skip Jira API call, run everything else')
-  .option('-t, --type <type>', 'Jira issue type for this run (e.g. Task, Bug, Story, Sub-task). Overrides .haitaskrc jira.issueType')
-  .option('-s, --status <status>', 'Transition issue to this status after create (e.g. Done, "To Do", "In Progress"). Overrides .haitaskrc jira.transitionToStatus')
+  .description('Run full pipeline: Git → AI → target (Jira or Trello)')
+  .option('--dry', 'Skip creating task, run everything else')
+  .option('-c, --commits <n>', 'Number of commits to combine into one task (default: 1)', '1')
+  .option('-t, --type <type>', 'Jira issue type for this run (e.g. Task, Bug, Story). Overrides .haitaskrc jira.issueType')
+  .option('-s, --status <status>', 'Jira transition-to status after create (e.g. Done, "To Do"). Overrides .haitaskrc jira.transitionToStatus')
   .action((opts) => runRun(opts));
 
 program.parse();

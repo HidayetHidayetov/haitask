@@ -9,11 +9,16 @@ const CONVENTIONAL_PREFIXES = /^(feat|fix|chore|docs|style|refactor|test|build|c
  * @param {{ message: string, branch: string, repoName: string }} commitData
  * @returns {{ system: string, user: string }}
  */
+const BATCH_SEP = '\n\n---\n\n';
+
 export function buildPrompt(commitData) {
   const { message, branch, repoName } = commitData;
+  const isBatch = message.includes(BATCH_SEP);
+  const batchHint = isBatch
+    ? ' The user input may contain multiple commits separated by "---"; produce one task that summarizes all of them.\n\n'
+    : '';
   const system = `You generate a Jira task from a Git commit. Reply with a single JSON object only, no markdown or extra text.
-
-Keys:
+${batchHint}Keys:
 - "title": Short, formal Jira task summary (professional wording). Do NOT copy the commit message verbatim. Rewrite as a clear, formal task title suitable for Jira (e.g. "Add user login validation" not "test login stuff"). Do NOT include prefixes like feat:, fix:, chore: in the title.
 - "description": Detailed description in plain language, suitable for Jira. Expand and formalize the intent of the commit; do not just paste the commit message.
 - "labels": Array of strings, e.g. ["auto", "commit"].
