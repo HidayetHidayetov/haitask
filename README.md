@@ -1,6 +1,8 @@
 # HAITASK
 
-Generate tasks from your latest Git commit using AI — in **Jira** or **Trello**. Reads commit message and branch, produces a structured task (title, description, labels) via an AI provider, and creates the issue/card in your chosen target. Framework- and language-agnostic: works with any Git repo.
+**Write a commit → one command creates a task in Jira or Trello.**
+
+Generate tasks from your latest Git commit using AI. Reads commit message and branch, produces a structured task (title, description, labels) via an AI provider, and creates the issue/card in your chosen target. Framework- and language-agnostic: works with any Git repo.
 
 **Requirements:** Node.js >= 18
 
