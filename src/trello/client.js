@@ -24,12 +24,13 @@ export async function createTask(payload, config) {
 
   const trello = config?.trello || {};
   const listId = trello.listId?.trim();
+  const listIdHint = ' Get it from list URL (list ⋯ → Copy link) or run: node scripts/get-trello-list.js';
   if (!listId) {
-    throw new Error('Trello list ID missing. Set trello.listId in .haitaskrc (the list where cards are created).');
+    throw new Error('Trello list ID missing. Set trello.listId in .haitaskrc (the list where cards are created).' + listIdHint);
   }
   if (!TRELLO_ID_REGEX.test(listId)) {
     throw new Error(
-      'Trello list ID must be a 24-character hex string. Get it from the list URL or API (GET /boards/{id}/lists).'
+      'Trello list ID must be a 24-character hex string.' + listIdHint
     );
   }
 

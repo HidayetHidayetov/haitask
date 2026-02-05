@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2025-02-04
+
+### Added
+
+- **Init quick mode:** `haitask init --quick` — minimal questions: target (1/2/3) + required target field only; defaults for AI (groq), branches, prefixes. Trello quick: only list ID (with hint in prompt).
+
+### Changed
+
+- **Trello list ID errors:** "List ID missing" and "must be 24-character hex" now include hint: "Get it from list URL (list ⋯ → Copy link) or run: node scripts/get-trello-list.js".
+- **README (Trello):** Step-by-step for list ID shortened; "Quick way" with `node scripts/get-trello-list.js` in one line.
+
+---
+
 ## [0.3.0] - 2025-02-04
 
 ### Added
@@ -55,6 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `haitask init`, `haitask run`, `haitask run --dry`, `--type`, `--status`.
 - Rules: `allowedBranches`, `commitPrefixes`.
 
+[0.3.1]: https://github.com/HidayetHidayetov/haitask/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/HidayetHidayetov/haitask/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/HidayetHidayetov/haitask/compare/v0.1.6...v0.2.0
 [0.1.x]: https://github.com/HidayetHidayetov/haitask/releases

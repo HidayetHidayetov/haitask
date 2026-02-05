@@ -13,17 +13,18 @@ const pkg = require('../package.json');
 
 program
   .name('haitask')
-  .description('HAITASK — Generate Jira tasks from Git commits using AI')
+  .description('HAITASK — Generate tasks in Jira, Trello, or Linear from Git commits using AI')
   .version(pkg.version);
 
 program
   .command('init')
   .description('Create .haitaskrc and validate environment')
-  .action(runInit);
+  .option('--quick', 'Use defaults (target + minimal questions); one Enter for Jira/Trello/Linear choice')
+  .action((opts) => runInit(opts));
 
 program
   .command('run')
-  .description('Run full pipeline: Git → AI → target (Jira or Trello)')
+  .description('Run full pipeline: Git → AI → target (Jira, Trello, or Linear)')
   .option('--dry', 'Skip creating task, run everything else')
   .option('-c, --commits <n>', 'Number of commits to combine into one task (default: 1)', '1')
   .option('-t, --type <type>', 'Jira issue type for this run (e.g. Task, Bug, Story). Overrides .haitaskrc jira.issueType')

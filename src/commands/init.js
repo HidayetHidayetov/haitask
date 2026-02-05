@@ -79,6 +79,17 @@ async function askTrelloConfig(rl, ai, rules) {
   return { target: 'trello', trello, ai, rules };
 }
 
+/** Quick mode: only list ID (required). Hint in prompt. */
+async function askTrelloConfigQuick(rl, ai, rules) {
+  const listId = await question(
+    rl,
+    'Trello list ID (Board → list ⋯ → Copy link → 24-char ID from URL, or run: node scripts/get-trello-list.js)',
+    ''
+  );
+  const trello = { listId: listId.trim() };
+  return { target: 'trello', trello, ai, rules };
+}
+
 async function askLinearConfig(rl, ai, rules) {
   const teamId = await question(rl, 'Linear team ID (Team → Settings → ID, or from URL)', '');
   const linear = { teamId: teamId.trim() };
@@ -119,7 +130,14 @@ function printEnvHints(config, missing) {
   if (config?.target === 'linear') console.log('Linear key: https://linear.app/settings/api');
 }
 
-export async function runInit() {
+const DEFAULT_RULES = {
+  allowedBranches: ['main', 'develop', 'master'],
+  commitPrefixes: ['feat', 'fix', 'chore'],
+};
+const DEFAULT_AI = { provider: 'groq', model: DEFAULT_MODELS.groq };
+
+export async function runInit(options = {}) {
+  const quick = options.quick === true;
   const cwd = process.cwd();
   const rcPath = resolve(cwd, '.haitaskrc');
 
@@ -132,28 +150,34 @@ export async function runInit() {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
 
   try {
-    console.log('haitask init — answer the questions (Enter = use default).\n');
+    console.log(quick ? 'haitask init --quick (minimal questions, defaults for the rest).\n' : 'haitask init — answer the questions (Enter = use default).\n');
 
     const targetAnswer = await question(rl, 'Target: 1 = Jira, 2 = Trello, 3 = Linear', '1');
     const targetMap = { '1': 'jira', '2': 'trello', '3': 'linear' };
     const target = targetMap[targetAnswer] || 'jira';
 
-    const aiProvider = await question(rl, 'AI provider (groq | deepseek | openai)', 'groq');
-    const allowedBranchesStr = await question(rl, 'Allowed branches (comma-separated)', 'main,develop,master');
-    const commitPrefixesStr = await question(rl, 'Commit prefixes (comma-separated)', 'feat,fix,chore');
-
-    const rules = {
-      allowedBranches: parseList(allowedBranchesStr),
-      commitPrefixes: parseList(commitPrefixesStr),
-    };
-    const ai = {
-      provider: aiProvider.toLowerCase(),
-      model: DEFAULT_MODELS[aiProvider.toLowerCase()] || DEFAULT_MODELS.groq,
-    };
+    let rules;
+    let ai;
+    if (quick) {
+      rules = DEFAULT_RULES;
+      ai = DEFAULT_AI;
+    } else {
+      const aiProvider = await question(rl, 'AI provider (groq | deepseek | openai)', 'groq');
+      const allowedBranchesStr = await question(rl, 'Allowed branches (comma-separated)', 'main,develop,master');
+      const commitPrefixesStr = await question(rl, 'Commit prefixes (comma-separated)', 'feat,fix,chore');
+      rules = {
+        allowedBranches: parseList(allowedBranchesStr),
+        commitPrefixes: parseList(commitPrefixesStr),
+      };
+      ai = {
+        provider: aiProvider.toLowerCase(),
+        model: DEFAULT_MODELS[aiProvider.toLowerCase()] || DEFAULT_MODELS.groq,
+      };
+    }
 
     let config;
     if (target === 'jira') config = await askJiraConfig(rl, ai, rules);
-    else if (target === 'trello') config = await askTrelloConfig(rl, ai, rules);
+    else if (target === 'trello') config = quick ? await askTrelloConfigQuick(rl, ai, rules) : await askTrelloConfig(rl, ai, rules);
     else config = await askLinearConfig(rl, ai, rules);
 
     writeFileSync(rcPath, JSON.stringify(config, null, 2), 'utf-8');
