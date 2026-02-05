@@ -71,6 +71,8 @@ git clone https://github.com/HidayetHidayetov/haitask.git && cd haitask && npm i
 - **`.haitaskrc`** (project root): **`target`** (`jira` or `trello`); target-specific section (`jira` or `trello`); **`ai`** (`provider`, `model`); **`rules`** (`allowedBranches`, `commitPrefixes`). Single source of truth.
 - **`.env`**: API keys only. Loaded: **project** `.env`, then **global** `~/.haitask/.env`.
 
+**Security:** API keys stay in your `.env` file (never commit it). They are sent only to the services you use: Jira or Trello for creating tasks, and your chosen AI provider (Groq, Deepseek, or OpenAI) for generating the task text. No other servers receive your keys.
+
 **Target: Jira** — `jira.baseUrl`, `jira.projectKey`, `jira.issueType`, `jira.transitionToStatus`. Override issue type/status for one run: `haitask run --type Bug`, `haitask run --status "To Do"`. Optional assignee: `JIRA_ACCOUNT_ID` in `.env` (Jira Cloud account ID; use quotes if value contains `:`).
 
 **Target: Trello** — `trello.listId` (required: the list where new cards go; get from board URL or API). Optional: `trello.labelIds` (array of label IDs), `trello.memberId` or `TRELLO_MEMBER_ID` in `.env` for assignee. Get API key + token at https://trello.com/app-key.
