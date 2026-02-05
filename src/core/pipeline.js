@@ -6,7 +6,8 @@
 
 import { getLatestCommitData, getLatestCommitsData } from '../git/commit.js';
 import { generateTaskPayload } from '../ai/index.js';
-import { createTask } from '../backend/index.js';
+import { createTask, addComment } from '../backend/index.js';
+import { extractIssueKey } from '../utils/issue-key.js';
 
 const BATCH_SEP = '\n\n---\n\n';
 
@@ -58,13 +59,22 @@ export async function runPipeline(config, options = {}) {
   const commitData = numCommits > 1 ? await getLatestCommitsData(numCommits) : await getLatestCommitData();
   validateRules(commitData, config);
 
+  const target = (config?.target || 'jira').toLowerCase();
+  const linkToExisting = config?.rules?.linkToExistingIssue !== false;
+  const existingKey = linkToExisting ? extractIssueKey(commitData.message, target, config) : null;
+
+  if (existingKey) {
+    if (dry) return { ok: true, dry: true, commented: true, key: existingKey, commitData };
+    const { key, url } = await addComment(commitData.message, existingKey, config);
+    return { ok: true, commented: true, key, url, commitData };
+  }
+
   const payload = await generateTaskPayload(commitData, config);
 
   if (dry) {
     return { ok: true, dry: true, payload, commitData };
   }
 
-  const target = (config?.target || 'jira').toLowerCase();
   const mergedConfig =
     target === 'jira'
       ? mergeJiraOverrides(config, { issueType: typeOverride, transitionToStatus: statusOverride })

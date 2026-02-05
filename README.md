@@ -80,7 +80,7 @@ git clone https://github.com/HidayetHidayetov/haitask.git && cd haitask && npm i
 
 **AI providers** (`ai.provider`): `groq` (default, free), `deepseek` (free), `openai` (paid). Set the matching key in `.env`.
 
-**Rules:** If `allowedBranches` is non-empty, the current branch must be in the list. If `commitPrefixes` is non-empty, the commit message must start with one of them (e.g. `feat:`, `fix:`).
+**Rules:** If `allowedBranches` is non-empty, the current branch must be in the list. If `commitPrefixes` is non-empty, the commit message must start with one of them (e.g. `feat:`, `fix:`). **Link to existing:** If `rules.linkToExistingIssue` is not `false` and the commit message contains an issue key (Jira: `PROJ-123`, Trello: URL or 8-char shortLink), haitask adds the commit as a comment to that issue/card instead of creating a new task. Set `rules.linkToExistingIssue: false` in `.haitaskrc` to always create new tasks.
 
 **Task title:** The AI is instructed not to include commit-type prefixes (e.g. `feat:`) in the task title; the code strips them so the summary stays clean.
 
@@ -99,7 +99,7 @@ No framework-specific setup (e.g. Laravel, React, etc.); the tool only depends o
 ## What's next (roadmap)
 
 - **Batch:** ✅ Implemented — use `haitask run --commits N` to create one task from the last N commits.
-- **Link to existing issue:** If the commit message contains an issue key (e.g. `PROJ-123`), add the commit as a comment to that issue instead of creating a new one.
+- **Link to existing issue:** ✅ Implemented — if the commit message contains an issue key (Jira: `PROJ-123`, Trello: URL or shortLink), haitask adds the commit as a comment to that issue/card. Disable with `rules.linkToExistingIssue: false`.
 - **More targets:** Linear, Asana, or others (same adapter pattern).
 
 ---

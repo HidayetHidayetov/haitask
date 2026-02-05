@@ -226,3 +226,32 @@ export async function createIssue(payload, config) {
 
   return { key, self: data.self };
 }
+
+/**
+ * Add a comment to an existing Jira issue.
+ * @param {string} issueKey - Issue key (e.g. PROJ-123)
+ * @param {string} bodyText - Plain text comment
+ * @param {object} config - .haitaskrc (jira.baseUrl)
+ * @returns {Promise<{ key: string, url: string }>}
+ */
+export async function addComment(issueKey, bodyText, config) {
+  const baseUrl = (config?.jira?.baseUrl || process.env.JIRA_BASE_URL || '').replace(/\/$/, '');
+  const email = process.env.JIRA_EMAIL;
+  const token = process.env.JIRA_API_TOKEN;
+  if (!baseUrl || !email?.trim() || !token?.trim()) {
+    throw new Error('Jira credentials missing. Set JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN in .env.');
+  }
+  const auth = Buffer.from(`${email}:${token}`, 'utf-8').toString('base64');
+  const body = { body: plainTextToAdf(bodyText || '') };
+  const res = await fetch(`${baseUrl}/rest/api/3/issue/${encodeURIComponent(issueKey)}/comment`, {
+    method: 'POST',
+    headers: jiraHeaders(auth),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Jira comment API ${res.status}: ${text || res.statusText}`);
+  }
+  const url = `${baseUrl}/browse/${issueKey}`;
+  return { key: issueKey, url };
+}

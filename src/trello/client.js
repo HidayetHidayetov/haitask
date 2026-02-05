@@ -69,3 +69,32 @@ export async function createTask(payload, config) {
 
   return { key, url: cardUrl };
 }
+
+/**
+ * Add a comment to an existing Trello card (by shortLink or id).
+ * @param {string} cardIdOrShortLink - Card id or shortLink (e.g. from URL)
+ * @param {string} bodyText - Plain text comment
+ * @param {object} config - Unused; env has TRELLO_API_KEY, TRELLO_TOKEN
+ * @returns {Promise<{ key: string, url: string }>}
+ */
+export async function addComment(cardIdOrShortLink, bodyText, config) {
+  const apiKey = process.env.TRELLO_API_KEY?.trim();
+  const token = process.env.TRELLO_TOKEN?.trim();
+  if (!apiKey || !token) {
+    throw new Error(
+      'Trello credentials missing. Set TRELLO_API_KEY and TRELLO_TOKEN in .env. Get them at https://trello.com/app-key'
+    );
+  }
+  const id = (cardIdOrShortLink || '').trim();
+  if (!id) throw new Error('Trello card id/shortLink missing.');
+  const query = new URLSearchParams({ key: apiKey, token, text: (bodyText || '').trim() || '(no message)' });
+  const res = await fetch(`${TRELLO_API}/cards/${encodeURIComponent(id)}/actions/comments?${query.toString()}`, {
+    method: 'POST',
+    headers: { Accept: 'application/json' },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Trello comment API ${res.status}: ${text || res.statusText}`);
+  }
+  return { key: id, url: `https://trello.com/c/${id}` };
+}

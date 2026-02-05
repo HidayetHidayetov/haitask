@@ -39,19 +39,27 @@ export async function runRun(options = {}) {
 
     if (result.dry) {
       console.log('Dry run — no task created.');
-      const msg = result.commitData?.message || '';
-      const preview = msg.includes('\n\n---\n\n') ? `${result.commitData?.count ?? '?'} commits` : msg.split('\n')[0] || '';
-      console.log('Commit(s):', preview);
-      console.log('Would create task:', result.payload?.title || '');
-      if (result.payload?.description) {
-        const desc = result.payload.description;
-        console.log('Description (preview):', desc.slice(0, 120) + (desc.length > 120 ? '...' : ''));
+      if (result.commented) {
+        console.log('Would add comment to existing:', result.key);
+      } else {
+        const msg = result.commitData?.message || '';
+        const preview = msg.includes('\n\n---\n\n') ? `${result.commitData?.count ?? '?'} commits` : msg.split('\n')[0] || '';
+        console.log('Commit(s):', preview);
+        console.log('Would create task:', result.payload?.title || '');
+        if (result.payload?.description) {
+          const desc = result.payload.description;
+          console.log('Description (preview):', desc.slice(0, 120) + (desc.length > 120 ? '...' : ''));
+        }
       }
       return;
     }
 
     const displayUrl = getDisplayUrl(config, result.key, result.url);
-    console.log('Created task:', result.key);
+    if (result.commented) {
+      console.log('Added comment to:', result.key);
+    } else {
+      console.log('Created task:', result.key);
+    }
     if (displayUrl && displayUrl !== result.key) console.log(displayUrl);
   } catch (err) {
     console.error('Error:', err.message);
