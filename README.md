@@ -95,6 +95,14 @@ No framework-specific setup (e.g. Laravel, React, etc.); the tool only depends o
 
 ---
 
+## What's next (roadmap)
+
+- **Batch:** Create one task from multiple commits (e.g. last N commits).
+- **Link to existing issue:** If the commit message contains an issue key (e.g. `PROJ-123`), add the commit as a comment to that issue instead of creating a new one.
+- **More targets:** Linear, Asana, or others (same adapter pattern).
+
+---
+
 ## Troubleshooting
 
 **Jira — assignee not set / still unassigned**  
