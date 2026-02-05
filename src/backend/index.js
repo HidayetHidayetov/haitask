@@ -24,7 +24,12 @@ export async function addComment(message, issueKey, config) {
     const { addComment: trelloAddComment } = await import('../trello/client.js');
     return trelloAddComment(issueKey, message, config);
   }
+  if (target === 'linear') {
+    const { addComment: linearAddComment } = await import('../linear/client.js');
+    return linearAddComment(issueKey, message, config);
+  }
   throw new Error(`Target "${target}" has no addComment adapter.`);
+}
 }
 
 /**
@@ -48,6 +53,11 @@ export async function createTask(payload, config) {
   if (target === 'trello') {
     const { createTask: createTrelloTask } = await import('../trello/client.js');
     return createTrelloTask(payload, config);
+  }
+
+  if (target === 'linear') {
+    const { createTask: createLinearTask } = await import('../linear/client.js');
+    return createLinearTask(payload, config);
   }
 
   throw new Error(`Target "${target}" has no adapter.`);

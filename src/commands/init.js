@@ -39,7 +39,13 @@ TRELLO_API_KEY=
 TRELLO_TOKEN=
 TRELLO_MEMBER_ID=
 `;
-  return base + (target === 'trello' ? trelloBlock : jiraBlock);
+  const linearBlock = `
+# Linear (when target is linear). Get key: https://linear.app/settings/api
+LINEAR_API_KEY=
+`;
+  if (target === 'trello') return base + trelloBlock;
+  if (target === 'linear') return base + linearBlock;
+  return base + jiraBlock;
 }
 
 async function askJiraConfig(rl, ai, rules) {
@@ -73,6 +79,12 @@ async function askTrelloConfig(rl, ai, rules) {
   return { target: 'trello', trello, ai, rules };
 }
 
+async function askLinearConfig(rl, ai, rules) {
+  const teamId = await question(rl, 'Linear team ID (Team → Settings → ID, or from URL)', '');
+  const linear = { teamId: teamId.trim() };
+  return { target: 'linear', linear, ai, rules };
+}
+
 function writeEnvFile(cwd, target, where) {
   const envContent = getEnvExampleContent(target);
   const home = process.env.HOME || process.env.USERPROFILE;
@@ -104,6 +116,7 @@ function printEnvHints(config, missing) {
   if (config?.ai?.provider === 'groq') console.log('Groq key: https://console.groq.com/keys');
   if (config?.ai?.provider === 'deepseek') console.log('Deepseek key: https://platform.deepseek.com/');
   if (config?.target === 'trello') console.log('Trello key + token: https://trello.com/app-key');
+  if (config?.target === 'linear') console.log('Linear key: https://linear.app/settings/api');
 }
 
 export async function runInit() {
@@ -121,8 +134,9 @@ export async function runInit() {
   try {
     console.log('haitask init — answer the questions (Enter = use default).\n');
 
-    const targetAnswer = await question(rl, 'Target: 1 = Jira, 2 = Trello', '1');
-    const target = targetAnswer === '2' ? 'trello' : 'jira';
+    const targetAnswer = await question(rl, 'Target: 1 = Jira, 2 = Trello, 3 = Linear', '1');
+    const targetMap = { '1': 'jira', '2': 'trello', '3': 'linear' };
+    const target = targetMap[targetAnswer] || 'jira';
 
     const aiProvider = await question(rl, 'AI provider (groq | deepseek | openai)', 'groq');
     const allowedBranchesStr = await question(rl, 'Allowed branches (comma-separated)', 'main,develop,master');
@@ -137,7 +151,10 @@ export async function runInit() {
       model: DEFAULT_MODELS[aiProvider.toLowerCase()] || DEFAULT_MODELS.groq,
     };
 
-    const config = target === 'jira' ? await askJiraConfig(rl, ai, rules) : await askTrelloConfig(rl, ai, rules);
+    let config;
+    if (target === 'jira') config = await askJiraConfig(rl, ai, rules);
+    else if (target === 'trello') config = await askTrelloConfig(rl, ai, rules);
+    else config = await askLinearConfig(rl, ai, rules);
 
     writeFileSync(rcPath, JSON.stringify(config, null, 2), 'utf-8');
     console.log('\nCreated .haitaskrc');

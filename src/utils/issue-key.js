@@ -37,5 +37,10 @@ export function extractIssueKey(message, target, config = {}) {
     return shortMatch ? shortMatch[1] : null;
   }
 
+  if (t === 'linear') {
+    const match = text.match(JIRA_KEY_REGEX);
+    return match ? match[1] : null;
+  }
+
   return null;
 }

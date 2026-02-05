@@ -26,10 +26,13 @@ const DEFAULT_RC = {
 
 const JIRA_REQUIRED = ['JIRA_BASE_URL', 'JIRA_EMAIL', 'JIRA_API_TOKEN'];
 const TRELLO_REQUIRED = ['TRELLO_API_KEY', 'TRELLO_TOKEN'];
+const LINEAR_REQUIRED = ['LINEAR_API_KEY'];
 
 function getRequiredKeysForTarget(target) {
   const t = (target || 'jira').toLowerCase();
-  return t === 'trello' ? [...TRELLO_REQUIRED] : [...JIRA_REQUIRED];
+  if (t === 'trello') return [...TRELLO_REQUIRED];
+  if (t === 'linear') return [...LINEAR_REQUIRED];
+  return [...JIRA_REQUIRED];
 }
 
 /**

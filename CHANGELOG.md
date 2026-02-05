@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-02-04
+
+### Added
+
+- **Linear support:** Create Linear issues from commits. Set `target: "linear"` in `.haitaskrc` and configure `linear.teamId`. Env: `LINEAR_API_KEY`. API key: https://linear.app/settings/api.
+- **Init:** `haitask init` offers target 3 = Linear; asks for Linear team ID and writes env template with `LINEAR_API_KEY`.
+- **Link to existing Linear issue:** Commit message containing a Linear issue identifier (e.g. `ENG-123`) triggers `addComment` on that issue instead of creating a new one (same behaviour as Jira/Trello).
+
+### Changed
+
+- **Backend:** Dispatcher supports `target === 'linear'` for `createTask` and `addComment`.
+- **Constants:** `VALID_TARGETS` includes `linear`. Config loader accepts `linear` section.
+- **Env validation:** `getRequiredKeysForTarget('linear')` returns `LINEAR_API_KEY`.
+
+---
+
 ## [0.2.0] - 2025-02-04
 
 ### Added
@@ -39,5 +55,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `haitask init`, `haitask run`, `haitask run --dry`, `--type`, `--status`.
 - Rules: `allowedBranches`, `commitPrefixes`.
 
+[0.3.0]: https://github.com/HidayetHidayetov/haitask/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/HidayetHidayetov/haitask/compare/v0.1.6...v0.2.0
 [0.1.x]: https://github.com/HidayetHidayetov/haitask/releases
