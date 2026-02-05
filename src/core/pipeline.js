@@ -14,7 +14,7 @@ import { createTask } from '../backend/index.js';
  * @param {{ rules?: { allowedBranches?: string[], commitPrefixes?: string[] } }} config
  * @throws {Error} If validation fails
  */
-function validateRules(commitData, config) {
+export function validateRules(commitData, config) {
   const { message, branch } = commitData;
   const rules = config?.rules || {};
   const allowedBranches = rules.allowedBranches;

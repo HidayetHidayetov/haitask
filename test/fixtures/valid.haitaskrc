@@ -1,0 +1,11 @@
+{
+  "target": "jira",
+  "jira": {
+    "baseUrl": "https://example.atlassian.net",
+    "projectKey": "PROJ",
+    "issueType": "Task",
+    "transitionToStatus": "Done"
+  },
+  "ai": { "provider": "groq", "model": "llama-3.1-8b-instant" },
+  "rules": { "allowedBranches": ["main"], "commitPrefixes": ["feat", "fix"] }
+}
