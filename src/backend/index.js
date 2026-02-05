@@ -30,7 +30,6 @@ export async function addComment(message, issueKey, config) {
   }
   throw new Error(`Target "${target}" has no addComment adapter.`);
 }
-}
 
 /**
  * Create a task in the configured target (Jira, Trello, …).
