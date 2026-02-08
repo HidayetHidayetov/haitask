@@ -2,12 +2,14 @@
  * Pipeline: Git → AI → target (Jira, Trello, …).
  * Orchestrates steps. No direct I/O (no console.log).
  * Returns structured result for CLI to display.
+ * Idempotency: same commit hash → skip create, return stored key/url.
  */
 
 import { getLatestCommitData, getLatestCommitsData } from '../git/commit.js';
 import { generateTaskPayload } from '../ai/index.js';
 import { createTask, addComment } from '../backend/index.js';
 import { extractIssueKey } from '../utils/issue-key.js';
+import { readState, writeState } from '../utils/idempotency.js';
 
 const BATCH_SEP = '\n\n---\n\n';
 
@@ -75,12 +77,22 @@ export async function runPipeline(config, options = {}) {
     return { ok: true, dry: true, payload, commitData };
   }
 
+  const commitHash = commitData.commitHash;
+  const repoRoot = commitData.repoRoot;
+  const state = repoRoot && commitHash ? readState(repoRoot) : null;
+  if (state?.commitHash === commitHash && state?.taskKey) {
+    return { ok: true, skipped: true, key: state.taskKey, url: state.taskUrl, payload, commitData };
+  }
+
   const mergedConfig =
     target === 'jira'
       ? mergeJiraOverrides(config, { issueType: typeOverride, transitionToStatus: statusOverride })
       : config;
 
   const { key, url } = await createTask(payload, mergedConfig);
+  if (repoRoot && commitHash && key) {
+    writeState(repoRoot, { commitHash, taskKey: key, taskUrl: url });
+  }
   return { ok: true, key, url, payload, commitData };
 }
 

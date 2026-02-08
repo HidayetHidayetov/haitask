@@ -1,11 +1,12 @@
 /**
  * Backend abstraction: one createTask(payload, config) for all targets (Jira, Trello, …).
- * Dispatches to the right adapter based on config.target.
+ * Dispatches to the right adapter based on config.target. Wraps adapter calls with retry (5xx, 429, network).
  */
 
 import { createIssue, addComment as jiraAddComment } from '../jira/client.js';
 import { VALID_TARGETS } from '../config/constants.js';
 import { buildJiraUrl } from '../utils/urls.js';
+import { withRetry } from '../utils/retry.js';
 
 /**
  * Add a comment to an existing issue/card (link-to-existing feature).
@@ -19,16 +20,13 @@ export async function addComment(message, issueKey, config) {
   if (!VALID_TARGETS.includes(target)) {
     throw new Error(`Unknown target: "${target}". Supported: ${VALID_TARGETS.join(', ')}.`);
   }
-  if (target === 'jira') return jiraAddComment(issueKey, message, config);
-  if (target === 'trello') {
-    const { addComment: trelloAddComment } = await import('../trello/client.js');
-    return trelloAddComment(issueKey, message, config);
-  }
-  if (target === 'linear') {
-    const { addComment: linearAddComment } = await import('../linear/client.js');
-    return linearAddComment(issueKey, message, config);
-  }
-  throw new Error(`Target "${target}" has no addComment adapter.`);
+  const run = () => {
+    if (target === 'jira') return jiraAddComment(issueKey, message, config);
+    if (target === 'trello') return import('../trello/client.js').then((m) => m.addComment(issueKey, message, config));
+    if (target === 'linear') return import('../linear/client.js').then((m) => m.addComment(issueKey, message, config));
+    throw new Error(`Target "${target}" has no addComment adapter.`);
+  };
+  return withRetry(run);
 }
 
 /**
@@ -44,20 +42,20 @@ export async function createTask(payload, config) {
     throw new Error(`Unknown target: "${target}". Supported: ${VALID_TARGETS.join(', ')}.`);
   }
 
-  if (target === 'jira') {
-    const { key } = await createIssue(payload, config);
-    return { key, url: buildJiraUrl(config, key) };
-  }
-
-  if (target === 'trello') {
-    const { createTask: createTrelloTask } = await import('../trello/client.js');
-    return createTrelloTask(payload, config);
-  }
-
-  if (target === 'linear') {
-    const { createTask: createLinearTask } = await import('../linear/client.js');
-    return createLinearTask(payload, config);
-  }
-
-  throw new Error(`Target "${target}" has no adapter.`);
+  const run = async () => {
+    if (target === 'jira') {
+      const { key } = await createIssue(payload, config);
+      return { key, url: buildJiraUrl(config, key) };
+    }
+    if (target === 'trello') {
+      const { createTask: createTrelloTask } = await import('../trello/client.js');
+      return createTrelloTask(payload, config);
+    }
+    if (target === 'linear') {
+      const { createTask: createLinearTask } = await import('../linear/client.js');
+      return createLinearTask(payload, config);
+    }
+    throw new Error(`Target "${target}" has no adapter.`);
+  };
+  return withRetry(run);
 }

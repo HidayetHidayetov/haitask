@@ -3,6 +3,8 @@
  * API: https://api.linear.app/graphql
  */
 
+import { getHttpHint } from '../utils/http-hints.js';
+
 const LINEAR_GRAPHQL = 'https://api.linear.app/graphql';
 
 const CREATE_ISSUE_MUTATION = `
@@ -57,7 +59,10 @@ export async function createTask(payload, config) {
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Linear API error ${res.status}: ${text || res.statusText}`);
+    const hint = getHttpHint('linear', res.status);
+    const err = new Error(`Linear API error ${res.status}: ${text || res.statusText}${hint ? ' ' + hint : ''}`);
+    err.status = res.status;
+    throw err;
   }
 
   const data = await res.json();
@@ -108,7 +113,13 @@ export async function addComment(identifier, bodyText, config) {
     headers: { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: apiKey },
     body: JSON.stringify({ query: GET_ISSUE_QUERY, variables: { identifier: id } }),
   });
-  if (!resIssue.ok) throw new Error(`Linear API ${resIssue.status}: ${await resIssue.text()}`);
+  if (!resIssue.ok) {
+    const text = await resIssue.text();
+    const hint = getHttpHint('linear', resIssue.status);
+    const e = new Error(`Linear API ${resIssue.status}: ${text}${hint ? ' ' + hint : ''}`);
+    e.status = resIssue.status;
+    throw e;
+  }
   const dataIssue = await resIssue.json();
   const issue = dataIssue?.data?.issue;
   if (!issue?.id) {
@@ -124,7 +135,13 @@ export async function addComment(identifier, bodyText, config) {
       variables: { input: { issueId: issue.id, body: (bodyText || '').trim() || '(no message)' } },
     }),
   });
-  if (!resComment.ok) throw new Error(`Linear comment API ${resComment.status}: ${await resComment.text()}`);
+  if (!resComment.ok) {
+    const text = await resComment.text();
+    const hint = getHttpHint('linear', resComment.status);
+    const e = new Error(`Linear comment API ${resComment.status}: ${text}${hint ? ' ' + hint : ''}`);
+    e.status = resComment.status;
+    throw e;
+  }
   const dataComment = await resComment.json();
   if (dataComment?.errors?.[0]) throw new Error(`Linear comment: ${dataComment.errors[0].message}`);
 

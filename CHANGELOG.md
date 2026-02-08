@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2025-02-04
+
+### Added
+
+- **Retry:** `createTask` and `addComment` are wrapped with `withRetry` (2 retries, exponential backoff). Retries on 5xx, 429, and network errors; no retry on 4xx (except 429). Adapters attach `err.status` so backend can decide.
+- **Idempotency:** State stored in `.git/haitask-state.json` (commit hash → task key/url). If the same commit is run again, create is skipped and "Already created for this commit: KEY" is shown. Git data now includes `commitHash` and `repoRoot`.
+- **HTTP error hints:** Jira, Trello, and Linear API errors (401, 403, 404) now append a short hint (e.g. "Check JIRA_EMAIL and JIRA_API_TOKEN in .env.") via `utils/http-hints.js`.
+
+### Changed
+
+- **Backend:** Uses `withRetry` from `utils/retry.js` for all adapter calls.
+- **Pipeline:** Reads/writes idempotency state before/after create; returns `skipped: true` when commit was already processed.
+- **run.js:** Displays "Already created for this commit:" when `result.skipped`.
+
+---
+
 ## [0.3.1] - 2025-02-04
 
 ### Added
@@ -68,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `haitask init`, `haitask run`, `haitask run --dry`, `--type`, `--status`.
 - Rules: `allowedBranches`, `commitPrefixes`.
 
+[0.3.2]: https://github.com/HidayetHidayetov/haitask/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/HidayetHidayetov/haitask/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/HidayetHidayetov/haitask/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/HidayetHidayetov/haitask/compare/v0.1.6...v0.2.0

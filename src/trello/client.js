@@ -4,6 +4,7 @@
  */
 
 import { TRELLO_ID_REGEX } from '../config/constants.js';
+import { getHttpHint } from '../utils/http-hints.js';
 
 const TRELLO_API = 'https://api.trello.com/1';
 
@@ -61,7 +62,10 @@ export async function createTask(payload, config) {
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Trello API error ${res.status}: ${text || res.statusText}`);
+    const hint = getHttpHint('trello', res.status);
+    const err = new Error(`Trello API error ${res.status}: ${text || res.statusText}${hint ? ' ' + hint : ''}`);
+    err.status = res.status;
+    throw err;
   }
 
   const card = await res.json();
@@ -95,7 +99,10 @@ export async function addComment(cardIdOrShortLink, bodyText, config) {
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Trello comment API ${res.status}: ${text || res.statusText}`);
+    const hint = getHttpHint('trello', res.status);
+    const err = new Error(`Trello comment API ${res.status}: ${text || res.statusText}${hint ? ' ' + hint : ''}`);
+    err.status = res.status;
+    throw err;
   }
   return { key: id, url: `https://trello.com/c/${id}` };
 }

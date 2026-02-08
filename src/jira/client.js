@@ -3,6 +3,8 @@
  * Jira Cloud REST API v3.
  */
 
+import { getHttpHint } from '../utils/http-hints.js';
+
 const ASSIGN_DELAY_MS = 4000;
 const DEFAULT_PROJECT_KEY = 'PROJ';
 const DEFAULT_ISSUE_TYPE = 'Task';
@@ -207,7 +209,11 @@ export async function createIssue(payload, config) {
     }
     if (!createRes.ok) {
       const errText = createRes.bodyUsed ? firstErrorText : await createRes.text();
-      throw new Error(`Jira API error ${createRes.status}: ${errText || createRes.statusText}`);
+      const hint = getHttpHint('jira', createRes.status);
+      const msg = `Jira API error ${createRes.status}: ${errText || createRes.statusText}${hint ? ' ' + hint : ''}`;
+      const err = new Error(msg);
+      err.status = createRes.status;
+      throw err;
     }
   }
 
@@ -250,7 +256,10 @@ export async function addComment(issueKey, bodyText, config) {
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Jira comment API ${res.status}: ${text || res.statusText}`);
+    const hint = getHttpHint('jira', res.status);
+    const err = new Error(`Jira comment API ${res.status}: ${text || res.statusText}${hint ? ' ' + hint : ''}`);
+    err.status = res.status;
+    throw err;
   }
   const url = `${baseUrl}/browse/${issueKey}`;
   return { key: issueKey, url };

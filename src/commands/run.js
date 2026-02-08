@@ -55,7 +55,9 @@ export async function runRun(options = {}) {
     }
 
     const displayUrl = getDisplayUrl(config, result.key, result.url);
-    if (result.commented) {
+    if (result.skipped) {
+      console.log('Already created for this commit:', result.key);
+    } else if (result.commented) {
       console.log('Added comment to:', result.key);
     } else {
       console.log('Created task:', result.key);
