@@ -98,6 +98,53 @@ To try without creating a task: `haitask run --dry`.
 
 ---
 
+## GitHub Actions Integration
+
+Add this workflow to `.github/workflows/haitask.yml` for automatic task creation:
+
+```yaml
+name: Create Task from Commit
+
+on:
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  create-task:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install HAITASK
+      run: npm install -g haitask
+      
+    - name: Create task from latest commit
+      env:
+        GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        # Add your target-specific keys:
+        # JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        # TRELLO_TOKEN: ${{ secrets.TRELLO_TOKEN }}
+        # LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+      run: |
+        if [ -f ".haitaskrc" ]; then
+          haitask run
+        fi
+```
+
+**Setup:**
+1. Copy the workflow to your repo
+2. Add required secrets to GitHub repo settings
+3. Configure `.haitaskrc` in your project root
+
+---
+
 ## Roadmap
 
 - ✅ **Batch** — `haitask run --commits N`

@@ -1,0 +1,60 @@
+name: Create Task from Commit
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    types: [ opened, synchronize ]
+
+jobs:
+  create-task:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.action == 'opened'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install HAITASK
+      run: npm install -g haitask
+      
+    - name: Create task from latest commit
+      env:
+        # Add your environment variables here
+        GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        # Or use other AI providers:
+        # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        # DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        
+        # Target-specific keys:
+        # JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+        # JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+        # JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        
+        # TRELLO_API_KEY: ${{ secrets.TRELLO_API_KEY }}
+        # TRELLO_TOKEN: ${{ secrets.TRELLO_TOKEN }}
+        
+        # LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+      run: |
+        if [ -f ".haitaskrc" ]; then
+          haitask run
+        else
+          echo "No .haitaskrc found - skipping task creation"
+        fi
+        
+    - name: Create task on PR (optional)
+      if: github.event_name == 'pull_request'
+      env:
+        # Same environment variables as above
+        GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      run: |
+        if [ -f ".haitaskrc" ]; then
+          haitask run --commits 5
+        fi
