@@ -62,6 +62,7 @@ To try without creating a task: `haitask run --dry`.
 |---------|-------------|
 | `haitask init` | Interactive setup: target, AI, rules → writes `.haitaskrc` and optional `.env` |
 | `haitask init --quick` | Minimal prompts: target + required fields only; defaults for AI, branches, prefixes |
+| `haitask check` | Validate `.haitaskrc` + required env keys without running the pipeline |
 | `haitask run` | Creates a task from the latest commit (Jira / Trello / Linear) |
 | `haitask run --dry` | Same flow, but does not create a task |
 | `haitask run --commits N` | Combine the last N commits into one task (e.g. `--commits 3`) |

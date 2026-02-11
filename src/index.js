@@ -5,6 +5,7 @@ import { loadEnvFiles } from './config/env-loader.js';
 import { program } from 'commander';
 import { runInit } from './commands/init.js';
 import { runRun } from './commands/run.js';
+import { runCheck } from './commands/check.js';
 
 loadEnvFiles();
 
@@ -21,6 +22,11 @@ program
   .description('Create .haitaskrc and validate environment')
   .option('--quick', 'Use defaults (target + minimal questions); one Enter for Jira/Trello/Linear choice')
   .action((opts) => runInit(opts));
+
+program
+  .command('check')
+  .description('Validate .haitaskrc and required env without running pipeline')
+  .action(() => runCheck());
 
 program
   .command('run')
