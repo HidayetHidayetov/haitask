@@ -9,7 +9,7 @@ import { buildPrompt, parseTaskPayload } from './utils.js';
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
 /**
- * Call Deepseek and return task payload for Jira.
+ * Call Deepseek and return task payload for the configured target.
  * @param {{ message: string, branch: string, repoName: string }} commitData
  * @param {{ ai: { model?: string } }} config
  * @returns {Promise<{ title: string, description: string, labels: string[] }>}
@@ -21,7 +21,7 @@ export async function generateDeepseek(commitData, config) {
   }
 
   const model = config?.ai?.model || 'deepseek-chat';
-  const { system, user } = buildPrompt(commitData);
+  const { system, user } = buildPrompt(commitData, config?.target);
 
   const response = await fetch(DEEPSEEK_API_URL, {
     method: 'POST',
@@ -47,7 +47,7 @@ export async function generateDeepseek(commitData, config) {
   const data = await response.json();
   const content = data?.choices?.[0]?.message?.content;
   if (typeof content !== 'string') {
-    throw new Error('Deepseek response missing choices[0].message.content');
+    throw new TypeError('Deepseek response missing choices[0].message.content');
   }
 
   return parseTaskPayload(content.trim());

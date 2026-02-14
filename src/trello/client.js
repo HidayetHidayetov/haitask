@@ -8,6 +8,50 @@ import { getHttpHint } from '../utils/http-hints.js';
 
 const TRELLO_API = 'https://api.trello.com/1';
 
+function withPriorityInDescription(description, priority) {
+  const p = (priority || '').trim();
+  if (!p) return description;
+  return `Priority: ${p}\n\n${description}`.trim();
+}
+
+async function resolveTrelloLabelIds(apiKey, token, listId, labels) {
+  const desired = (Array.isArray(labels) ? labels : [])
+    .filter((v) => typeof v === 'string' && v.trim())
+    .map((v) => v.trim().toLowerCase());
+  if (desired.length === 0) return [];
+
+  try {
+    const query = new URLSearchParams({ key: apiKey, token });
+    const listRes = await fetch(`${TRELLO_API}/lists/${encodeURIComponent(listId)}?fields=idBoard&${query.toString()}`, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    });
+    if (!listRes.ok) return [];
+    const listData = await listRes.json();
+    const boardId = listData?.idBoard;
+    if (!boardId || !TRELLO_ID_REGEX.test(boardId)) return [];
+
+    const labelsRes = await fetch(
+      `${TRELLO_API}/boards/${encodeURIComponent(boardId)}/labels?fields=id,name&limit=1000&${query.toString()}`,
+      { method: 'GET', headers: { Accept: 'application/json' } }
+    );
+    if (!labelsRes.ok) return [];
+    const boardLabels = await labelsRes.json();
+    if (!Array.isArray(boardLabels)) return [];
+
+    const byName = new Map();
+    for (const label of boardLabels) {
+      const name = typeof label?.name === 'string' ? label.name.trim().toLowerCase() : '';
+      if (name && typeof label?.id === 'string' && TRELLO_ID_REGEX.test(label.id)) {
+        byName.set(name, label.id);
+      }
+    }
+    return desired.map((name) => byName.get(name)).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Create a Trello card from AI payload. Same interface as Jira adapter: returns { key, url }.
  * @param {object} payload - { title, description, labels, priority } from AI
@@ -36,7 +80,7 @@ export async function createTask(payload, config) {
   }
 
   const name = (payload?.title || '').trim() || 'Untitled';
-  const desc = (payload?.description || '').trim() || '';
+  const desc = withPriorityInDescription((payload?.description || '').trim() || '', payload?.priority);
 
   const query = new URLSearchParams({ key: apiKey, token });
   const body = { idList: listId, name, desc };
@@ -45,12 +89,16 @@ export async function createTask(payload, config) {
   const memberId = trello.memberId?.trim() || process.env.TRELLO_MEMBER_ID?.trim();
   if (memberId && TRELLO_ID_REGEX.test(memberId)) body.idMembers = [memberId];
 
-  const labelIds = trello.labelIds;
-  if (Array.isArray(labelIds) && labelIds.length > 0) {
-    body.idLabels = labelIds
+  const configLabelIds = Array.isArray(trello.labelIds)
+    ? trello.labelIds
       .filter((id) => typeof id === 'string' && id.trim())
       .map((id) => id.trim())
-      .filter((id) => TRELLO_ID_REGEX.test(id));
+      .filter((id) => TRELLO_ID_REGEX.test(id))
+    : [];
+  const aiLabelIds = await resolveTrelloLabelIds(apiKey, token, listId, payload?.labels);
+  const mergedLabelIds = [...new Set([...configLabelIds, ...aiLabelIds])];
+  if (mergedLabelIds.length > 0) {
+    body.idLabels = mergedLabelIds;
   }
 
   const url = `${TRELLO_API}/cards?${query.toString()}`;

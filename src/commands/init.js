@@ -7,6 +7,7 @@ import { writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { validateEnv } from '../config/init.js';
 import { loadConfig } from '../config/load.js';
+import { VALID_TARGETS } from '../config/constants.js';
 
 const DEFAULT_MODELS = { groq: 'llama-3.1-8b-instant', deepseek: 'deepseek-chat', openai: 'gpt-4o-mini' };
 
@@ -136,8 +137,79 @@ const DEFAULT_RULES = {
 };
 const DEFAULT_AI = { provider: 'groq', model: DEFAULT_MODELS.groq };
 
+function normalizePresetTarget(preset) {
+  const target = (preset || '').trim().toLowerCase();
+  if (!target) return null;
+  if (!VALID_TARGETS.includes(target)) return '__invalid__';
+  return target;
+}
+
+function buildPresetConfig(target) {
+  if (target === 'trello') {
+    return {
+      target: 'trello',
+      trello: { listId: 'YOUR_TRELLO_LIST_ID' },
+      ai: DEFAULT_AI,
+      rules: DEFAULT_RULES,
+    };
+  }
+  if (target === 'linear') {
+    return {
+      target: 'linear',
+      linear: { teamId: 'YOUR_LINEAR_TEAM_ID' },
+      ai: DEFAULT_AI,
+      rules: DEFAULT_RULES,
+    };
+  }
+  return {
+    target: 'jira',
+    jira: {
+      baseUrl: 'https://your-domain.atlassian.net',
+      projectKey: 'PROJ',
+      issueType: 'Task',
+      transitionToStatus: 'Done',
+    },
+    ai: DEFAULT_AI,
+    rules: DEFAULT_RULES,
+  };
+}
+
+async function buildInteractiveConfig(rl, quick) {
+  const targetAnswer = await question(rl, 'Target: 1 = Jira, 2 = Trello, 3 = Linear', '1');
+  const targetMap = { '1': 'jira', '2': 'trello', '3': 'linear' };
+  const target = targetMap[targetAnswer] || 'jira';
+
+  let rules;
+  let ai;
+  if (quick) {
+    rules = DEFAULT_RULES;
+    ai = DEFAULT_AI;
+  } else {
+    const aiProvider = await question(rl, 'AI provider (groq | deepseek | openai)', 'groq');
+    const allowedBranchesStr = await question(rl, 'Allowed branches (comma-separated)', 'main,develop,master');
+    const commitPrefixesStr = await question(rl, 'Commit prefixes (comma-separated)', 'feat,fix,chore');
+    rules = {
+      allowedBranches: parseList(allowedBranchesStr),
+      commitPrefixes: parseList(commitPrefixesStr),
+    };
+    ai = {
+      provider: aiProvider.toLowerCase(),
+      model: DEFAULT_MODELS[aiProvider.toLowerCase()] || DEFAULT_MODELS.groq,
+    };
+  }
+
+  let config;
+  if (target === 'jira') config = await askJiraConfig(rl, ai, rules);
+  else if (target === 'trello') config = quick ? await askTrelloConfigQuick(rl, ai, rules) : await askTrelloConfig(rl, ai, rules);
+  else config = await askLinearConfig(rl, ai, rules);
+
+  return { target, config };
+}
+
 export async function runInit(options = {}) {
   const quick = options.quick === true;
+  const presetTarget = normalizePresetTarget(options.preset);
+  const usePreset = presetTarget && presetTarget !== '__invalid__';
   const cwd = process.cwd();
   const rcPath = resolve(cwd, '.haitaskrc');
 
@@ -147,38 +219,33 @@ export async function runInit(options = {}) {
     return;
   }
 
+  if (presetTarget === '__invalid__') {
+    console.error(`Invalid preset target "${options.preset}". Use one of: ${VALID_TARGETS.join(', ')}.`);
+    process.exitCode = 1;
+    return;
+  }
+
+  if (usePreset) {
+    const config = buildPresetConfig(presetTarget);
+    writeFileSync(rcPath, JSON.stringify(config, null, 2), 'utf-8');
+    console.log(`Created .haitaskrc from preset: ${presetTarget}`);
+    writeEnvFile(cwd, presetTarget, '1');
+
+    const { valid, missing } = validateEnv(cwd, config);
+    if (!valid) {
+      printEnvHints(config, missing);
+      process.exitCode = 1;
+      return;
+    }
+    console.log('\nEnvironment looks good. Run "haitask run" after your next commit.');
+    return;
+  }
+
   const rl = createInterface({ input: process.stdin, output: process.stdout });
 
   try {
     console.log(quick ? 'haitask init --quick (minimal questions, defaults for the rest).\n' : 'haitask init — answer the questions (Enter = use default).\n');
-
-    const targetAnswer = await question(rl, 'Target: 1 = Jira, 2 = Trello, 3 = Linear', '1');
-    const targetMap = { '1': 'jira', '2': 'trello', '3': 'linear' };
-    const target = targetMap[targetAnswer] || 'jira';
-
-    let rules;
-    let ai;
-    if (quick) {
-      rules = DEFAULT_RULES;
-      ai = DEFAULT_AI;
-    } else {
-      const aiProvider = await question(rl, 'AI provider (groq | deepseek | openai)', 'groq');
-      const allowedBranchesStr = await question(rl, 'Allowed branches (comma-separated)', 'main,develop,master');
-      const commitPrefixesStr = await question(rl, 'Commit prefixes (comma-separated)', 'feat,fix,chore');
-      rules = {
-        allowedBranches: parseList(allowedBranchesStr),
-        commitPrefixes: parseList(commitPrefixesStr),
-      };
-      ai = {
-        provider: aiProvider.toLowerCase(),
-        model: DEFAULT_MODELS[aiProvider.toLowerCase()] || DEFAULT_MODELS.groq,
-      };
-    }
-
-    let config;
-    if (target === 'jira') config = await askJiraConfig(rl, ai, rules);
-    else if (target === 'trello') config = quick ? await askTrelloConfigQuick(rl, ai, rules) : await askTrelloConfig(rl, ai, rules);
-    else config = await askLinearConfig(rl, ai, rules);
+    const { target, config } = await buildInteractiveConfig(rl, quick);
 
     writeFileSync(rcPath, JSON.stringify(config, null, 2), 'utf-8');
     console.log('\nCreated .haitaskrc');

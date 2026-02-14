@@ -15,6 +15,59 @@ const CREATE_ISSUE_MUTATION = `
   }
 `;
 
+const TEAM_LABELS_QUERY = `
+  query TeamLabels($teamId: String!) {
+    team(id: $teamId) {
+      labels {
+        nodes { id name }
+      }
+    }
+  }
+`;
+
+function toLinearPriority(priority) {
+  const p = (priority || '').trim();
+  if (p === 'Highest') return 1;
+  if (p === 'High') return 2;
+  if (p === 'Low' || p === 'Lowest') return 4;
+  return 3;
+}
+
+async function resolveLinearLabelIds(apiKey, teamId, labels) {
+  const desired = (Array.isArray(labels) ? labels : [])
+    .filter((v) => typeof v === 'string' && v.trim())
+    .map((v) => v.trim().toLowerCase());
+  if (desired.length === 0) return [];
+
+  try {
+    const res = await fetch(LINEAR_GRAPHQL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: apiKey,
+      },
+      body: JSON.stringify({
+        query: TEAM_LABELS_QUERY,
+        variables: { teamId },
+      }),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const nodes = data?.data?.team?.labels?.nodes;
+    if (!Array.isArray(nodes)) return [];
+
+    const byName = new Map();
+    for (const node of nodes) {
+      const key = typeof node?.name === 'string' ? node.name.trim().toLowerCase() : '';
+      if (key && typeof node?.id === 'string') byName.set(key, node.id);
+    }
+    return desired.map((name) => byName.get(name)).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Create a Linear issue from AI payload. Same interface as Jira/Trello: returns { key, url }.
  * @param {object} payload - { title, description, labels, priority } from AI
@@ -37,6 +90,8 @@ export async function createTask(payload, config) {
 
   const title = (payload?.title || '').trim() || 'Untitled';
   const description = (payload?.description || '').trim() || '';
+  const priority = toLinearPriority(payload?.priority);
+  const labelIds = await resolveLinearLabelIds(apiKey, teamId, payload?.labels);
 
   const res = await fetch(LINEAR_GRAPHQL, {
     method: 'POST',
@@ -52,6 +107,8 @@ export async function createTask(payload, config) {
           teamId,
           title,
           ...(description && { description }),
+          ...(Number.isFinite(priority) && { priority }),
+          ...(labelIds.length > 0 && { labelIds }),
         },
       },
     }),

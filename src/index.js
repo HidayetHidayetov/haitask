@@ -21,6 +21,7 @@ program
   .command('init')
   .description('Create .haitaskrc and validate environment')
   .option('--quick', 'Use defaults (target + minimal questions); one Enter for Jira/Trello/Linear choice')
+  .option('--preset <target>', 'Preset target without target prompt (jira|trello|linear)')
   .action((opts) => runInit(opts));
 
 program
@@ -32,6 +33,7 @@ program
   .command('run')
   .description('Run full pipeline: Git → AI → target (Jira, Trello, or Linear)')
   .option('--dry', 'Skip creating task, run everything else')
+  .option('--json', 'Print machine-readable JSON output')
   .option('-c, --commits <n>', 'Number of commits to combine into one task (default: 1)', '1')
   .option('-t, --type <type>', 'Jira issue type for this run (e.g. Task, Bug, Story). Overrides .haitaskrc jira.issueType')
   .option('-s, --status <status>', 'Jira transition-to status after create (e.g. Done, "To Do"). Overrides .haitaskrc jira.transitionToStatus')

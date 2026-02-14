@@ -9,7 +9,7 @@ import { buildPrompt, parseTaskPayload } from './utils.js';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 /**
- * Call Groq and return task payload for Jira.
+ * Call Groq and return task payload for the configured target.
  * @param {{ message: string, branch: string, repoName: string }} commitData
  * @param {{ ai: { model?: string } }} config
  * @returns {Promise<{ title: string, description: string, labels: string[] }>}
@@ -23,7 +23,7 @@ export async function generateGroq(commitData, config) {
   }
 
   const model = config?.ai?.model || 'llama-3.1-8b-instant';
-  const { system, user } = buildPrompt(commitData);
+  const { system, user } = buildPrompt(commitData, config?.target);
 
   const response = await fetch(GROQ_API_URL, {
     method: 'POST',
@@ -49,7 +49,7 @@ export async function generateGroq(commitData, config) {
   const data = await response.json();
   const content = data?.choices?.[0]?.message?.content;
   if (typeof content !== 'string') {
-    throw new Error('Groq response missing choices[0].message.content');
+    throw new TypeError('Groq response missing choices[0].message.content');
   }
 
   return parseTaskPayload(content.trim());

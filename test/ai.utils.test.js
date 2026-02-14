@@ -64,8 +64,17 @@ describe('buildPrompt', () => {
     const commitData = { message: 'feat: add x', branch: 'main', repoName: 'my-repo' };
     const { system, user } = buildPrompt(commitData);
     assert.ok(system.includes('JSON'));
+    assert.ok(system.includes('Jira'));
     assert.ok(user.includes('my-repo'));
     assert.ok(user.includes('main'));
     assert.ok(user.includes('feat: add x'));
+  });
+
+  it('adapts system prompt by target', () => {
+    const commitData = { message: 'fix: bug', branch: 'dev', repoName: 'repo' };
+    const { system: linearSystem } = buildPrompt(commitData, 'linear');
+    const { system: trelloSystem } = buildPrompt(commitData, 'trello');
+    assert.ok(linearSystem.includes('Linear issue'));
+    assert.ok(trelloSystem.includes('Trello card'));
   });
 });

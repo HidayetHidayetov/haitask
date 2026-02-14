@@ -33,6 +33,7 @@ haitask init
 
 Pick a target (1 = Jira, 2 = Trello, 3 = Linear) and answer the prompts. You get a `.haitaskrc` and an optional `.env` template.  
 **Quick mode:** `haitask init --quick` — fewer questions, sensible defaults.
+**Preset mode:** `haitask init --preset jira|trello|linear` — non-interactive starter config.
 
 **2. Add API keys**  
 In the generated `.env`, set the keys for your target and AI provider:
@@ -53,6 +54,8 @@ haitask run
 ```
 
 To try without creating a task: `haitask run --dry`.
+For machine-readable output: `haitask run --dry --json`.
+For machine-readable output: `haitask run --dry --json`.
 
 ---
 
@@ -62,12 +65,98 @@ To try without creating a task: `haitask run --dry`.
 |---------|-------------|
 | `haitask init` | Interactive setup: target, AI, rules → writes `.haitaskrc` and optional `.env` |
 | `haitask init --quick` | Minimal prompts: target + required fields only; defaults for AI, branches, prefixes |
+| `haitask init --preset <target>` | Non-interactive preset config for `jira`, `trello`, or `linear` |
 | `haitask check` | Validate `.haitaskrc` + required env keys without running the pipeline |
 | `haitask run` | Creates a task from the latest commit (Jira / Trello / Linear) |
 | `haitask run --dry` | Same flow, but does not create a task |
+| `haitask run --json` | Print machine-readable JSON output (works with `--dry`) |
 | `haitask run --commits N` | Combine the last N commits into one task (e.g. `--commits 3`) |
 | `haitask run --type <type>` | (Jira only) Override issue type for this run (Task, Bug, Story) |
 | `haitask run --status <status>` | (Jira only) Override status after create (Done, "To Do", etc.) |
+
+---
+
+## JSON output (automation)
+
+Use `--json` when integrating with CI/CD or scripts. This guarantees a parseable payload on both success and failure.
+
+```bash
+haitask run --dry --json
+```
+
+Success shape:
+
+```json
+{
+  "ok": true,
+  "dry": true,
+  "skipped": false,
+  "commented": false,
+  "key": null,
+  "url": null,
+  "payload": {
+    "title": "Add login validation",
+    "description": "..."
+  },
+  "commit": {
+    "branch": "main",
+    "commitHash": "abc123...",
+    "repoName": "my-repo",
+    "count": 1
+  }
+}
+```
+
+Failure shape:
+
+```json
+{
+  "ok": false,
+  "error": "Config error: Config not found ..."
+}
+```
+
+---
+
+## JSON output (automation)
+
+Use `--json` when integrating with CI/CD or scripts. This guarantees a parseable payload on both success and failure.
+
+```bash
+haitask run --dry --json
+```
+
+Success shape:
+
+```json
+{
+  "ok": true,
+  "dry": true,
+  "skipped": false,
+  "commented": false,
+  "key": null,
+  "url": null,
+  "payload": {
+    "title": "Add login validation",
+    "description": "..."
+  },
+  "commit": {
+    "branch": "main",
+    "commitHash": "abc123...",
+    "repoName": "my-repo",
+    "count": 1
+  }
+}
+```
+
+Failure shape:
+
+```json
+{
+  "ok": false,
+  "error": "Config error: Config not found ..."
+}
+```
 
 ---
 
@@ -94,7 +183,7 @@ To try without creating a task: `haitask run --dry`.
 
 - **Global:** `npm install -g haitask` → run `haitask init` once per repo, then `haitask run` after commits.
 - **Per project:** `npm install haitask --save-dev` → `npx haitask run`.
-- **CI / scripts:** Run `npx haitask run` from the repo root; ensure `.haitaskrc` and env vars are available.
+- **CI / scripts:** Run `npx haitask run --dry --json` from the repo root, parse `ok`, and fail pipeline when `ok === false`.
 
 ---
 

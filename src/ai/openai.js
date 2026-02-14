@@ -7,7 +7,7 @@ import { buildPrompt, parseTaskPayload } from './utils.js';
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 /**
- * Call OpenAI and return task payload for Jira.
+ * Call OpenAI and return task payload for the configured target.
  * @param {{ message: string, branch: string, repoName: string }} commitData
  * @param {{ ai: { model?: string } }} config
  * @returns {Promise<{ title: string, description: string, labels: string[] }>}
@@ -19,7 +19,7 @@ export async function generateOpenAI(commitData, config) {
   }
 
   const model = config?.ai?.model || 'gpt-4o-mini';
-  const { system, user } = buildPrompt(commitData);
+  const { system, user } = buildPrompt(commitData, config?.target);
 
   const response = await fetch(OPENAI_API_URL, {
     method: 'POST',
@@ -45,7 +45,7 @@ export async function generateOpenAI(commitData, config) {
   const data = await response.json();
   const content = data?.choices?.[0]?.message?.content;
   if (typeof content !== 'string') {
-    throw new Error('OpenAI response missing choices[0].message.content');
+    throw new TypeError('OpenAI response missing choices[0].message.content');
   }
 
   return parseTaskPayload(content.trim());
