@@ -5,21 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.5] - 2026-02-13
+
+### Added
+
+- **CLI integration test for JSON mode:** Added `test/cli.run-json.integration.test.js` to verify `node src/index.js run --json` returns a parseable error contract when config is missing.
+- **Automation test coverage:** Added `test/run.command.test.js` to validate `runRun({ json: true })` behavior for config and runtime failure paths.
+
+### Changed
+
+- **README quality pass:** Removed duplicate sections, clarified `--json` usage, and added a CI-friendly bash + `jq` parsing example.
+
+---
+
 ## [0.3.4] - 2026-02-13
 
 ### Added
 
 - **JSON output mode:** `haitask run --json` now returns machine-readable output for both success and failure states.
 - **Init preset mode:** `haitask init --preset jira|trello|linear` for non-interactive setup.
-- **CLI integration tests:** Added `test/cli.run-json.integration.test.js` to verify `node src/index.js run --json` contract.
-- **Command tests:** Added `test/run.command.test.js` for `runRun({ json: true })` behavior.
 
 ### Changed
 
 - **AI prompts are target-aware:** Prompt text now adapts to Jira, Trello, or Linear instead of Jira-only wording.
 - **Linear parity:** Uses AI priority mapping and best-effort AI label mapping to team labels.
 - **Trello parity:** Merges configured labels with best-effort AI label mapping and prefixes description with inferred priority.
-- **README:** Expanded automation guidance with `--json` examples and output schema.
 
 ---
 
@@ -115,6 +125,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `haitask init`, `haitask run`, `haitask run --dry`, `--type`, `--status`.
 - Rules: `allowedBranches`, `commitPrefixes`.
 
+[0.3.5]: https://github.com/HidayetHidayetov/haitask/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/HidayetHidayetov/haitask/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/HidayetHidayetov/haitask/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/HidayetHidayetov/haitask/compare/v0.3.1...v0.3.2

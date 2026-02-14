@@ -55,7 +55,6 @@ haitask run
 
 To try without creating a task: `haitask run --dry`.
 For machine-readable output: `haitask run --dry --json`.
-For machine-readable output: `haitask run --dry --json`.
 
 ---
 
@@ -73,48 +72,6 @@ For machine-readable output: `haitask run --dry --json`.
 | `haitask run --commits N` | Combine the last N commits into one task (e.g. `--commits 3`) |
 | `haitask run --type <type>` | (Jira only) Override issue type for this run (Task, Bug, Story) |
 | `haitask run --status <status>` | (Jira only) Override status after create (Done, "To Do", etc.) |
-
----
-
-## JSON output (automation)
-
-Use `--json` when integrating with CI/CD or scripts. This guarantees a parseable payload on both success and failure.
-
-```bash
-haitask run --dry --json
-```
-
-Success shape:
-
-```json
-{
-  "ok": true,
-  "dry": true,
-  "skipped": false,
-  "commented": false,
-  "key": null,
-  "url": null,
-  "payload": {
-    "title": "Add login validation",
-    "description": "..."
-  },
-  "commit": {
-    "branch": "main",
-    "commitHash": "abc123...",
-    "repoName": "my-repo",
-    "count": 1
-  }
-}
-```
-
-Failure shape:
-
-```json
-{
-  "ok": false,
-  "error": "Config error: Config not found ..."
-}
-```
 
 ---
 
@@ -184,6 +141,14 @@ Failure shape:
 - **Global:** `npm install -g haitask` → run `haitask init` once per repo, then `haitask run` after commits.
 - **Per project:** `npm install haitask --save-dev` → `npx haitask run`.
 - **CI / scripts:** Run `npx haitask run --dry --json` from the repo root, parse `ok`, and fail pipeline when `ok === false`.
+
+Example (bash + `jq`):
+
+```bash
+out="$(npx haitask run --dry --json)"
+echo "$out"
+test "$(echo "$out" | jq -r '.ok')" = "true"
+```
 
 ---
 
