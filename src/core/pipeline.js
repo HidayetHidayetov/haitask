@@ -51,11 +51,11 @@ export function validateRules(commitData, config) {
 /**
  * Run full pipeline: Git → validate → AI → target (unless dry).
  * @param {object} config - Loaded .haitaskrc
- * @param {{ dry?: boolean, issueType?: string, transitionToStatus?: string, commits?: number }} options
+ * @param {{ dry?: boolean, issueType?: string, transitionToStatus?: string, commits?: number, lang?: string }} options
  * @returns {Promise<{ ok: boolean, dry?: boolean, key?: string, url?: string, payload?: object, commitData?: object, error?: string }>}
  */
 export async function runPipeline(config, options = {}) {
-  const { dry = false, issueType: typeOverride, transitionToStatus: statusOverride, commits: commitsOpt } = options;
+  const { dry = false, issueType: typeOverride, transitionToStatus: statusOverride, commits: commitsOpt, lang } = options;
   const numCommits = Math.max(1, Number(commitsOpt) || 1);
 
   const commitData = numCommits > 1 ? await getLatestCommitsData(numCommits) : await getLatestCommitData();
@@ -71,7 +71,7 @@ export async function runPipeline(config, options = {}) {
     return { ok: true, commented: true, key, url, commitData };
   }
 
-  const payload = await generateTaskPayload(commitData, config);
+  const payload = await generateTaskPayload(commitData, config, { lang });
 
   if (dry) {
     return { ok: true, dry: true, payload, commitData };

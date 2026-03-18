@@ -72,6 +72,22 @@ For machine-readable output: `haitask run --dry --json`.
 | `haitask run --commits N` | Combine the last N commits into one task (e.g. `--commits 3`) |
 | `haitask run --type <type>` | (Jira only) Override issue type for this run (Task, Bug, Story) |
 | `haitask run --status <status>` | (Jira only) Override status after create (Done, "To Do", etc.) |
+| `haitask run --lang <lang>` | Language for task title and description (en, az, tr, ru). Default: en |
+
+---
+
+## Language Support
+
+By default, task titles and descriptions are generated in English. Use `--lang` to generate them in a different language:
+
+```bash
+haitask run --lang az      # Azerbaijani
+haitask run --lang tr      # Turkish
+haitask run --lang ru      # Russian
+haitask run --lang en      # English (default)
+```
+
+Supported languages: `en` (English), `az` (Azerbaijani), `tr` (Turkish), `ru` (Russian).
 
 ---
 
