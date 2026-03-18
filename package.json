@@ -1,6 +1,6 @@
 {
   "name": "haitask",
-  "version": "0.3.5",
+  "version": "0.4.0",
   "description": "HAITASK \u2014 AI-powered task creation from Git commits. Creates issues in Jira, Trello, or Linear from your latest commit message and branch.",
   "type": "module",
   "main": "src/index.js",

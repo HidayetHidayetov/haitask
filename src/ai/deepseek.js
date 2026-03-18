@@ -12,16 +12,18 @@ const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
  * Call Deepseek and return task payload for the configured target.
  * @param {{ message: string, branch: string, repoName: string }} commitData
  * @param {{ ai: { model?: string } }} config
+ * @param {{ lang?: string }} options
  * @returns {Promise<{ title: string, description: string, labels: string[] }>}
  */
-export async function generateDeepseek(commitData, config) {
+export async function generateDeepseek(commitData, config, options = {}) {
   const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey?.trim()) {
     throw new Error('DEEPSEEK_API_KEY is not set. Add it to .env. Get free key at https://platform.deepseek.com/');
   }
 
   const model = config?.ai?.model || 'deepseek-chat';
-  const { system, user } = buildPrompt(commitData, config?.target);
+  const { lang } = options || {};
+  const { system, user } = buildPrompt(commitData, config?.target, { lang });
 
   const response = await fetch(DEEPSEEK_API_URL, {
     method: 'POST',

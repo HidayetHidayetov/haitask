@@ -37,6 +37,7 @@ program
   .option('-c, --commits <n>', 'Number of commits to combine into one task (default: 1)', '1')
   .option('-t, --type <type>', 'Jira issue type for this run (e.g. Task, Bug, Story). Overrides .haitaskrc jira.issueType')
   .option('-s, --status <status>', 'Jira transition-to status after create (e.g. Done, "To Do"). Overrides .haitaskrc jira.transitionToStatus')
+  .option('-l, --lang <language>', 'Language for task title and description (en, az, tr, ru). Default: en')
   .action((opts) => runRun(opts));
 
 program.parse();

@@ -12,9 +12,10 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
  * Call Groq and return task payload for the configured target.
  * @param {{ message: string, branch: string, repoName: string }} commitData
  * @param {{ ai: { model?: string } }} config
+ * @param {{ lang?: string }} options
  * @returns {Promise<{ title: string, description: string, labels: string[] }>}
  */
-export async function generateGroq(commitData, config) {
+export async function generateGroq(commitData, config, options = {}) {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey?.trim()) {
     throw new Error(
@@ -23,7 +24,8 @@ export async function generateGroq(commitData, config) {
   }
 
   const model = config?.ai?.model || 'llama-3.1-8b-instant';
-  const { system, user } = buildPrompt(commitData, config?.target);
+  const { lang } = options || {};
+  const { system, user } = buildPrompt(commitData, config?.target, { lang });
 
   const response = await fetch(GROQ_API_URL, {
     method: 'POST',

@@ -88,6 +88,7 @@ export async function runRun(options = {}) {
   const type = options.type?.trim() || undefined;
   const status = options.status?.trim() || undefined;
   const commits = Number(options.commits ?? 1);
+  const lang = options.lang?.trim() || undefined;
 
   let config;
   try {
@@ -98,7 +99,7 @@ export async function runRun(options = {}) {
   }
 
   try {
-    const result = await runPipeline(config, { dry, issueType: type, transitionToStatus: status, commits });
+    const result = await runPipeline(config, { dry, issueType: type, transitionToStatus: status, commits, lang });
 
     if (!result.ok) {
       printFailure(json, result.error || 'Pipeline failed.');

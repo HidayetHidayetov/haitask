@@ -4,10 +4,38 @@
 
 const CONVENTIONAL_PREFIXES = /^(feat|fix|chore|docs|style|refactor|test|build|ci):\s*/i;
 
+const LANG_ALIASES = {
+  en: 'en',
+  english: 'en',
+  az: 'az',
+  azerbaijani: 'az',
+  'az-az': 'az',
+  tr: 'tr',
+  turkish: 'tr',
+  'tr-tr': 'tr',
+  ru: 'ru',
+  russian: 'ru',
+  'ru-ru': 'ru',
+};
+
+const LANG_INSTRUCTIONS = {
+  en: 'Write the title and description in English.',
+  az: 'Write the title and description in Azerbaijani (Azərbaycan) language.',
+  tr: 'Write the title and description in Turkish language.',
+  ru: 'Write the title and description in Russian language.',
+};
+
+function normalizeLang(lang) {
+  if (!lang) return 'en';
+  const normalized = lang.toLowerCase().trim();
+  return LANG_ALIASES[normalized] || 'en';
+}
+
 /**
  * Build system + user prompt from commit data.
  * @param {{ message: string, branch: string, repoName: string }} commitData
  * @param {string} [target='jira']
+ * @param {{ lang?: string }} options
  * @returns {{ system: string, user: string }}
  */
 const BATCH_SEP = '\n\n---\n\n';
@@ -18,7 +46,7 @@ const TARGET_META = {
   linear: { displayName: 'Linear', workItem: 'issue', priorityField: true },
 };
 
-export function buildPrompt(commitData, target = 'jira') {
+export function buildPrompt(commitData, target = 'jira', options = {}) {
   const { message, branch, repoName } = commitData;
   const isBatch = message.includes(BATCH_SEP);
   const normalizedTarget = (target || 'jira').toLowerCase();
@@ -29,8 +57,13 @@ export function buildPrompt(commitData, target = 'jira') {
   const priorityRule = meta.priorityField
     ? '- "priority": One of: "Highest", "High", "Medium", "Low", "Lowest". Infer from commit message (e.g. "urgent", "critical", "hotfix" → High; "minor", "tweak" → Low; unclear → "Medium"). Default to "Medium" if unsure.'
     : '- "priority": Still provide one of "Highest", "High", "Medium", "Low", "Lowest". Some targets may not have a native priority field; it can be used for description context.';
+
+  const lang = normalizeLang(options?.lang);
+  const langInstruction = LANG_INSTRUCTIONS[lang] || LANG_INSTRUCTIONS.en;
+
   const system = `You generate a ${meta.displayName} ${meta.workItem} from a Git commit. Reply with a single JSON object only, no markdown or extra text.
-${batchHint}Keys:
+${batchHint}${langInstruction}
+Keys:
 - "title": Short, formal ${meta.displayName} ${meta.workItem} summary (professional wording). Do NOT copy the commit message verbatim. Rewrite as a clear, formal title. Do NOT include prefixes like feat:, fix:, chore: in the title.
 - "description": Detailed description in plain language, suitable for ${meta.displayName}. Expand and formalize the intent of the commit; do not just paste the commit message.
 - "labels": Array of strings, e.g. ["auto", "commit"].
